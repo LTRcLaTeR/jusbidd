@@ -1,0 +1,88 @@
+.register-wrapper {
+  min-height: 100vh;
+  background: #c9d6e3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.register-card {
+  background: #f2f2f2;
+  padding: 40px;
+  width: 450px;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.logo-section {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.logo-section img {
+  width: 100px;
+  margin-bottom: 5px;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+label {
+  font-weight: 500;
+  display: block;
+  margin-top: 15px;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border-radius: 6px;
+  border: 1px solid #aaa;
+  background: #e8e1d8;
+}
+
+.password-hint {
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+.password-hint ul {
+  padding-left: 18px;
+}
+
+.login-link {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.primary {
+  background: #163a70;
+  color: white;
+}
+
+.secondary {
+  background: #163a70;
+  color: white;
+  opacity: 0.8;
+}
+
+.error {
+  color: red;
+  text-align: center;
+}

@@ -12,9 +12,9 @@ const SECRET = "jusbidsecret";
 
 // REGISTER
 app.post("/register", async (req, res) => {
-  const { display_name, username, password, confirm_password, role } = req.body;
+  const { display_name, username, email, password, confirm_password, role } = req.body;
 
-  if (!display_name || !username || !password || !confirm_password)
+  if (!display_name || !username || !email || !password || !confirm_password)
     return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบ" });
 
   if (password !== confirm_password)
@@ -26,8 +26,8 @@ app.post("/register", async (req, res) => {
   const roleId = roleRes.rows[0].id;
 
   await pool.query(
-    "INSERT INTO users (display_name, username, password, role_id) VALUES ($1,$2,$3,$4)",
-    [display_name, username, hash, roleId]
+    "INSERT INTO users (display_name, username, email, password, role_id) VALUES ($1,$2,$3,$4,$5)",
+    [display_name, username, email, hash, roleId]
   );
 
   res.json({ message: "สมัครสำเร็จ" });
