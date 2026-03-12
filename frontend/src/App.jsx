@@ -4,19 +4,17 @@ import Register from "./pages/Register";
 import HomeBidder from "./pages/HomeBidder";
 import HomeSeller from "./pages/HomeSeller";
 import HomeAdmin from "./pages/HomeAdmin";
-import Seller from "./pages/Seller";
-import Admin from "./pages/Admin";
 import ProfileBidder from "./pages/ProfileBidder";
+import ProfileSeller from "./pages/ProfileSeller";
+import CreateAuction from "./pages/CreateAuction";
+import Chat from "./pages/Chat";
 
 function PrivateRoute({ children }) {
-  const token = localStorage.getItem("token");
-  return token ? children : <Navigate to="/login" replace />;
+  const token = sessionStorage.getItem("token");
+  return token ? children : <Navigate to="/home-bidder" replace />;
 }
 
 function HomeRedirect() {
-  const role = localStorage.getItem("role");
-  if (role === "seller") return <Navigate to="/home-seller" replace />;
-  if (role === "admin") return <Navigate to="/home-admin" replace />;
   return <Navigate to="/home-bidder" replace />;
 }
 
@@ -26,29 +24,13 @@ export default function App() {
       <Route path="/" element={<HomeRedirect />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-
       <Route path="/home-bidder" element={<HomeBidder />} />
       <Route path="/home-seller" element={<HomeSeller />} />
       <Route path="/home-admin" element={<HomeAdmin />} />
       <Route path="/profile" element={<ProfileBidder />} />
-
-      <Route
-        path="/seller"
-        element={
-          <PrivateRoute>
-            <Seller />
-          </PrivateRoute>
-        }
-      />
-
-      <Route
-        path="/admin"
-        element={
-          <PrivateRoute>
-            <Admin />
-          </PrivateRoute>
-        }
-      />
+      <Route path="/profile-seller" element={<ProfileSeller />} />
+      <Route path="/create-auction" element={<PrivateRoute><CreateAuction /></PrivateRoute>} />
+      <Route path="/chat/:auctionId/:otherUserId" element={<PrivateRoute><Chat /></PrivateRoute>} />
     </Routes>
   );
 }

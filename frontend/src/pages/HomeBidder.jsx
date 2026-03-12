@@ -41,9 +41,15 @@ export default function HomeBidder() {
         <h2 className="auction-header">รายการประมูล</h2>
 
         <div className="auction-grid">
-          {auctions.map((item) => (
-            <AuctionCard key={item.id} item={item} />
-          ))}
+          {auctions
+            .filter(item => {
+              const now = new Date();
+              const start = new Date(item.start_time);
+              return now >= start;
+            })
+            .map(item => (
+              <AuctionCard key={item.id} item={item} />
+            ))}
         </div>
       </div>
     </>

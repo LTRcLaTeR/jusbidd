@@ -102,3 +102,22 @@
   color: #1e3a5f;
   margin: 0;
 }
+
+.add-auction-btn{
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: orange;
+  color: white;
+  font-size: 32px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.add-auction-btn:hover{
+  background: #ff8c00;
+}

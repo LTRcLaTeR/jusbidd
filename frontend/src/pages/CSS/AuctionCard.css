@@ -1,9 +1,11 @@
 .card {
-  position: relative;
   border-radius: 15px;
   overflow: hidden;
   background: white;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .card img {
@@ -12,22 +14,415 @@
   object-fit: cover;
 }
 
-.card-overlay {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  background: rgba(15, 45, 80, 0.8);
-  color: white;
+.card-content {
+  display: flex;
   padding: 15px;
+  gap: 15px;
+  flex: 1;
+  background: rgba(15, 45, 80, 0.95);
+  color: white;
 }
 
-.card-overlay button {
-  margin-top: 10px;
-  width: 70%;
+.card-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-left h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: white;
+}
+
+.card-left .price {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #e0e0e0;
+}
+
+.card-left .current-price,
+.card-left .minimum-bid {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.card-left .minimum-bid-total {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: #ffe082;
+}
+
+.bid-btn {
+  width: 100%;
   padding: 8px;
   background: white;
   color: #1e3a5f;
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.bid-btn:hover {
+  background: #f0f0f0;
+}
+
+.card-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 120px;
+}
+
+.start-time {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px;
+  border-radius: 8px;
+  text-align: right;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.start-time .label {
+  margin: 0;
+  font-size: 12px;
+  color: #b0b0b0;
+  text-transform: uppercase;
+}
+
+.start-time .time {
+  margin: 5px 0 0 0;
+  font-size: 13px;
+  color: white;
+  font-weight: 600;
+}
+
+/* Winner text */
+.winner-text {
+  margin: 8px 0 0 0;
+  font-size: 14px;
+  color: #ffe082;
+  font-weight: 700;
+}
+
+/* Bid Popup - OLD (kept for compat) */
+.bid-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* ===== NEW bid popup (3-column) ===== */
+.bid-popup-modal-new {
+  background: #dce8f5;
+  border-radius: 16px;
+  padding: 24px 28px;
+  width: 900px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.bid-popup-title {
+  margin: 0 0 16px 0;
+  font-size: 20px;
+  color: #1e3a5f;
+}
+
+.bid-popup-layout {
+  display: flex;
+  gap: 20px;
+}
+
+/* Left column */
+.bid-popup-left {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bid-popup-img-new {
+  width: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.bid-popup-seller-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #333;
+}
+
+/* Center column */
+.bid-popup-center {
+  flex: 1;
+  background: rgba(255,255,255,0.6);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.bid-popup-desc-label {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #555;
+  font-weight: 600;
+}
+
+.bid-popup-desc {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Right column */
+.bid-popup-right {
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bid-popup-price-box {
+  background: white;
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid #bcd4ec;
+}
+
+.bid-popup-current-price {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e3a5f;
+}
+
+.bid-popup-timer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.bid-popup-timer-label {
+  background: #e53935;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.bid-popup-timer-value {
+  background: #fff3e0;
+  color: #e65100;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.bid-popup-condition {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.bid-popup-increment-info {
+  margin: 0;
+  font-size: 12px;
+  color: #e53935;
+}
+
+.bid-popup-input-new {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #bcd4ec;
+  font-size: 14px;
+  box-sizing: border-box;
+  background: white;
+}
+
+.bid-popup-input-new::placeholder {
+  color: #aaa;
+}
+
+.bid-popup-confirm-new {
+  width: 100%;
+  padding: 10px;
+  background: #1e3a5f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.bid-popup-confirm-new:hover {
+  background: #16304d;
+}
+
+.bid-popup-bottom {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.bid-popup-chat-btn {
+  padding: 10px 32px;
+  background: #1e3a5f;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.bid-popup-chat-btn:hover {
+  background: #16304d;
+}
+
+.bid-popup-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.bid-popup-close:hover {
+  color: #333;
+}
+
+.bid-popup-error {
+  color: #e53935;
+  font-size: 13px;
+  margin: 4px 0;
+}
+
+/* === Chat button on card === */
+.chat-btn-card {
+  width: 100%;
+  padding: 8px;
+  margin-top: 6px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: opacity 0.2s;
+}
+.chat-btn-card:hover {
+  opacity: 0.85;
+}
+
+/* === Edit auction button on card === */
+.edit-auction-btn {
+  width: 100%;
+  padding: 8px;
+  margin-top: 6px;
+  background: #ff9800;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+.edit-auction-btn:hover {
+  background: #f57c00;
+}
+
+/* === Edit auction popup modal === */
+.edit-auction-modal {
+  background: #dce8f5;
+  border-radius: 16px;
+  padding: 28px 32px;
+  width: 460px;
+  max-width: 92vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  position: relative;
+}
+.edit-auction-modal h3 {
+  margin: 0 0 18px 0;
+  color: #1e3a5f;
+  font-size: 18px;
+}
+.edit-auction-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #bcd4ec;
+  font-size: 14px;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  background: white;
+}
+.edit-auction-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #bcd4ec;
+  font-size: 14px;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  min-height: 100px;
+  resize: vertical;
+  background: white;
+  font-family: inherit;
+}
+.edit-auction-modal button {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-right: 10px;
+}
+.edit-auction-modal button:first-of-type {
+  background: #1e3a5f;
+  color: white;
+}
+.edit-auction-modal button:first-of-type:hover {
+  background: #16304d;
+}
+.edit-auction-modal button:last-of-type {
+  background: #ccc;
+  color: #333;
+}
+.edit-auction-success {
+  color: #2e7d32;
+  font-size: 13px;
+  margin-bottom: 8px;
 }

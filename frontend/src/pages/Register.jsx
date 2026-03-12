@@ -20,17 +20,32 @@ export default function Register() {
   const navigate = useNavigate();
 
   const validate = () => {
-
     let newErrors = {};
 
     if (!form.display_name) newErrors.display_name = "โปรดกรอกชื่อของคุณ";
-    if (!form.email) newErrors.email = "โปรดกรอกอีเมลของคุณ";
+    if (!form.email) {
+      newErrors.email = "โปรดกรอกอีเมลของคุณ";
+    } else {
+      // Email syntax check
+      const emailPattern = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+      if (!emailPattern.test(form.email)) {
+        newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
+      }
+    }
     if (!form.username) newErrors.username = "โปรดกรอกชื่อผู้ใช้";
     if (!form.password) newErrors.password = "โปรดกรอกรหัสผ่านของคุณ";
     if (!form.confirm_password) newErrors.confirm_password = "โปรดยืนยันรหัสผ่านของคุณ";
 
-    if (form.password && form.password.length < 8) {
-      newErrors.password = "รหัสผ่านต้องมีอย่างน้อย 8 ตัว";
+    if (form.password) {
+      if (form.password.length < 8) {
+        newErrors.password = "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร";
+      } else if (!/[a-z]/.test(form.password)) {
+        newErrors.password = "รหัสผ่านต้องมีตัวอักษรพิมพ์เล็กอย่างน้อย 1 ตัว";
+      } else if (!/[A-Z]/.test(form.password)) {
+        newErrors.password = "รหัสผ่านต้องมีตัวอักษรพิมพ์ใหญ่อย่างน้อย 1 ตัว";
+      } else if (!/[0-9]/.test(form.password)) {
+        newErrors.password = "รหัสผ่านต้องมีตัวเลขอย่างน้อย 1 ตัว";
+      }
     }
 
     if (form.password !== form.confirm_password) {

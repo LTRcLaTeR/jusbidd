@@ -6,23 +6,52 @@ import logo from "../assets/logo.png";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
+  const role = sessionStorage.getItem("role");
 
   const [openMenu, setOpenMenu] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("userId");
+    sessionStorage.removeItem("role");
     navigate("/");
+  };
+
+  const handleProfileClick = () => {
+    if (role === "seller") {
+      navigate("/profile-seller");
+    } else {
+      navigate("/profile");
+    }
+  };
+
+  const handleHomeClick = () => {
+    if (!role) {
+      navigate("/");
+    } else if (role === "seller") {
+      navigate("/home-seller");
+    } else if (role === "bidder") {
+      navigate("/home-bidder");
+    } else if (role === "admin") {
+      navigate("/home-admin");
+    } else {
+      navigate("/");
+    }
   };
 
   return (
     <div className="navbar">
 
       {/* LEFT LOGO */}
-      <div className="nav-left" onClick={() => navigate("/")}>
+      <div className="nav-left"> 
         <img src={logo} alt="logo" className="nav-logo" />
       </div>
+
+      {/* HOME BUTTON */}
+      <button className="btn-home" onClick={handleHomeClick} style={{marginLeft: 16}}>
+        หน้าแรก
+      </button>
 
       {/* CENTER SEARCH */}
       <div className="nav-center">
@@ -62,7 +91,7 @@ export default function Navbar() {
             {/* DROPDOWN */}
             {openMenu && (
               <div className="profile-menu">
-                <div onClick={() => navigate("/profile")}>
+                <div onClick={handleProfileClick}>
                   โปรไฟล์
                 </div>
 

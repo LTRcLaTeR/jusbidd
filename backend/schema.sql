@@ -16,14 +16,25 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+INSERT INTO users (display_name, username, email, password, role_id)
+VALUES
+('Bidder Demo', 'bidderdemo', 'bidder@example.com', '$2b$10$GFWjH9KzOL1E8fm8MwXQce/Ms7qE836S8OWZFiS64GAy61uHBH1rO', 1),
+('Seller Demo', 'sellerdemo', 'seller@example.com', '$2b$10$GFWjH9KzOL1E8fm8MwXQce/Ms7qE836S8OWZFiS64GAy61uHBH1rO', 2);
+
 CREATE TABLE IF NOT EXISTS auctions (
   id SERIAL PRIMARY KEY,
   title VARCHAR(255),
   description TEXT,
   image TEXT,
   starting_price INTEGER,
+  current_bid INTEGER DEFAULT 0,
   category VARCHAR(100),
   status VARCHAR(50) DEFAULT 'active',
+  seller_id INTEGER REFERENCES users(id),
+  seller_username VARCHAR(100),
+  bid_increment INTEGER DEFAULT 100,
+  start_time TIMESTAMP,
+  end_time TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -33,4 +44,13 @@ CREATE TABLE bids (
   auction_id INTEGER REFERENCES auctions(id),
   bid_amount INTEGER,
   bid_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE messages (
+  id SERIAL PRIMARY KEY,
+  auction_id INTEGER REFERENCES auctions(id),
+  sender_id INTEGER REFERENCES users(id),
+  receiver_id INTEGER REFERENCES users(id),
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

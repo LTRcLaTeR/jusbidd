@@ -36,9 +36,9 @@ export default function Login() {
       const res = await api.post("/login", form);
       const { token, role, id } = res.data;
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("userId", id);
-      localStorage.setItem("role", role);
+      sessionStorage.setItem("token", token);
+      sessionStorage.setItem("userId", id);
+      sessionStorage.setItem("role", role);
 
       if (role === "seller") navigate("/home-seller");
       else if (role === "admin") navigate("/home-admin");
