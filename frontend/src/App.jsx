@@ -3,30 +3,27 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import HomeBidder from "./pages/HomeBidder";
 import HomeSeller from "./pages/HomeSeller";
-import HomeAdmin from "./pages/HomeAdmin";
+import Admin from "./pages/Admin";
 import ProfileBidder from "./pages/ProfileBidder";
 import ProfileSeller from "./pages/ProfileSeller";
 import CreateAuction from "./pages/CreateAuction";
 import Chat from "./pages/Chat";
+import Landing from "./pages/Landing";
 
 function PrivateRoute({ children }) {
   const token = sessionStorage.getItem("token");
-  return token ? children : <Navigate to="/home-bidder" replace />;
-}
-
-function HomeRedirect() {
-  return <Navigate to="/home-bidder" replace />;
+  return token ? children : <Navigate to="/" replace />;
 }
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomeRedirect />} />
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/home-bidder" element={<HomeBidder />} />
       <Route path="/home-seller" element={<HomeSeller />} />
-      <Route path="/home-admin" element={<HomeAdmin />} />
+      <Route path="/admin" element={<Admin />} />
       <Route path="/profile" element={<ProfileBidder />} />
       <Route path="/profile-seller" element={<ProfileSeller />} />
       <Route path="/create-auction" element={<PrivateRoute><CreateAuction /></PrivateRoute>} />

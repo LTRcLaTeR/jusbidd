@@ -13,13 +13,15 @@ CREATE TABLE users (
     email VARCHAR(100) UNIQUE NOT NULL,
     password TEXT NOT NULL,
     role_id INTEGER REFERENCES roles(id),
+    status VARCHAR(20) DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 INSERT INTO users (display_name, username, email, password, role_id)
 VALUES
 ('Bidder Demo', 'bidderdemo', 'bidder@example.com', '$2b$10$GFWjH9KzOL1E8fm8MwXQce/Ms7qE836S8OWZFiS64GAy61uHBH1rO', 1),
-('Seller Demo', 'sellerdemo', 'seller@example.com', '$2b$10$GFWjH9KzOL1E8fm8MwXQce/Ms7qE836S8OWZFiS64GAy61uHBH1rO', 2);
+('Seller Demo', 'sellerdemo', 'seller@example.com', '$2b$10$GFWjH9KzOL1E8fm8MwXQce/Ms7qE836S8OWZFiS64GAy61uHBH1rO', 2),
+('Admin Demo', 'admindemo', 'admin@example.com', '$2b$10$GFWjH9KzOL1E8fm8MwXQce/Ms7qE836S8OWZFiS64GAy61uHBH1rO', 3);
 
 CREATE TABLE IF NOT EXISTS auctions (
   id SERIAL PRIMARY KEY,
@@ -52,5 +54,15 @@ CREATE TABLE messages (
   sender_id INTEGER REFERENCES users(id),
   receiver_id INTEGER REFERENCES users(id),
   content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE reports (
+  id SERIAL PRIMARY KEY,
+  reporter_id INTEGER REFERENCES users(id),
+  target_id INTEGER REFERENCES users(id),
+  report_type VARCHAR(100) NOT NULL,
+  description TEXT,
+  status VARCHAR(20) DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

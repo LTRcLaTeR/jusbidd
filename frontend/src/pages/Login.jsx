@@ -41,7 +41,7 @@ export default function Login() {
       sessionStorage.setItem("role", role);
 
       if (role === "seller") navigate("/home-seller");
-      else if (role === "admin") navigate("/home-admin");
+      else if (role === "admin") navigate("/admin");
       else navigate("/home-bidder");
 
     } catch (err) {

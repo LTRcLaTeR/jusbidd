@@ -241,6 +241,9 @@ app.put("/update-profile", authenticate, async (req, res) => {
 const auctionRoutes = require("./routes/auction");
 app.use("/auctions", auctionRoutes);
 
+const adminRoutes = require("./routes/admin");
+app.use("/admin", adminRoutes);
+
 // ============ MESSAGING ============
 
 // Send a message

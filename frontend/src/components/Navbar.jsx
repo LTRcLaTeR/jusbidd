@@ -43,7 +43,7 @@ export default function Navbar({ onSearch }) {
     } else if (role === "bidder") {
       navigate("/home-bidder");
     } else if (role === "admin") {
-      navigate("/home-admin");
+      navigate("/admin");
     } else {
       navigate("/");
     }
