@@ -32,9 +32,12 @@ services:
       # EMAIL_PASS: your_app_password
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:5002
     container_name: jusbid-frontend
     ports:
-      - "5175:5173"
+      - "5175:80"
     depends_on:
       - backend
