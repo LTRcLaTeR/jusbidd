@@ -19,10 +19,7 @@ services:
           name: jusbid-db
           property: connectionString
       - key: FRONTEND_URL
-        fromService:
-          name: jusbid-frontend
-          type: web
-          property: url
+        value: https://jusbid-frontend.onrender.com
       - key: NODE_ENV
         value: production
 
@@ -44,7 +41,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        fromService:
-          name: jusbid-backend
-          type: web
-          property: url
+        value: https://jusbid-backend.onrender.com
