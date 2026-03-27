@@ -1,9 +1,11 @@
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaUser, FaComments, FaTimes, FaMinus, FaExpand, FaCompress, FaImage } from "react-icons/fa";
 import api from "../api";
 import "../pages/CSS/FloatingChat.css";
 
 export default function FloatingChat() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -154,7 +156,8 @@ export default function FloatingChat() {
                       setActiveConv({
                         auctionId: c.auction_id,
                         otherUserId: c.other_user,
-                        otherUserName: c.other_user_name
+                        otherUserName: c.other_user_name,
+                        otherUserRoleId: c.other_user_role_id
                       })
                     }
                   >
@@ -175,8 +178,8 @@ export default function FloatingChat() {
               <div className="fc-header">
                 {expanded ? (
                   <>
-                    <div className="fc-header-avatar"><FaUser /></div>
-                    <span className="fc-header-title">{activeConv.otherUserName}</span>
+                    <div className="fc-header-avatar" onClick={() => { if (activeConv.otherUserRoleId !== 3) navigate(`/profile/${activeConv.otherUserId}`); }} style={activeConv.otherUserRoleId !== 3 ? { cursor: "pointer" } : {}}><FaUser /></div>
+                    <span className="fc-header-title" onClick={() => { if (activeConv.otherUserRoleId !== 3) navigate(`/profile/${activeConv.otherUserId}`); }} style={activeConv.otherUserRoleId !== 3 ? { cursor: "pointer" } : {}}>{activeConv.otherUserName}</span>
                     <span className="fc-header-arrow" onClick={() => { setExpanded(false); setOpen(false); setActiveConv(null); setMessages([]); }}>›</span>
                   </>
                 ) : (

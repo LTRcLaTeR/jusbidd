@@ -22,6 +22,7 @@ export default function CreateAuction(){
   const [preview,setPreview] = useState(null);
   const [errors,setErrors] = useState({});
   const [showPopup,setShowPopup] = useState(false);
+  const [submitting,setSubmitting] = useState(false);
 
   const handleChange = (e)=>{
     setForm({
@@ -53,7 +54,17 @@ export default function CreateAuction(){
     if (!form.start_time.trim()) newErrors.start_time = "กรุณากรอกเวลาเริ่มประมูล";
     if (!form.end_time.trim()) newErrors.end_time = "กรุณากรอกเวลาปิดประมูล";
 
-    if (form.start_time && form.end_time && new Date(form.start_time) >= new Date(form.end_time)) {
+    const now = new Date();
+
+    if (form.start_time && new Date(form.start_time) < now) {
+      newErrors.start_time = "ไม่สามารถใส่เวลาเริ่มประมูลในอดีตได้";
+    }
+
+    if (form.end_time && new Date(form.end_time) < now) {
+      newErrors.end_time = "ไม่สามารถใส่เวลาปิดประมูลในอดีตได้";
+    }
+
+    if (form.start_time && form.end_time && !newErrors.start_time && !newErrors.end_time && new Date(form.start_time) >= new Date(form.end_time)) {
       newErrors.end_time = "เวลาปิดประมูลต้องมากกว่าเวลาเริ่ม";
     }
 
@@ -64,6 +75,8 @@ export default function CreateAuction(){
   const handleSubmit = async () => {
 
     if (!validate()) return;
+    if (submitting) return;
+    setSubmitting(true);
 
     let imageData = "";
 
@@ -95,6 +108,7 @@ export default function CreateAuction(){
     }catch(err){
       console.log(err);
       alert("เกิดข้อผิดพลาด");
+      setSubmitting(false);
     }
 
   };
@@ -117,8 +131,8 @@ export default function CreateAuction(){
           ←
         </span>
 
-        <button className="post-btn" onClick={handleSubmit}>
-          โพสต์
+        <button className="post-btn" onClick={handleSubmit} disabled={submitting}>
+          {submitting ? "กำลังโพสต์..." : "โพสต์"}
         </button>
 
         <div className="create-container">
@@ -244,6 +258,16 @@ export default function CreateAuction(){
                 <option value="แฟชั่น">แฟชั่น</option>
                 <option value="ศิลปะ">ศิลปะ</option>
                 <option value="ยานพาหนะ">ยานพาหนะ</option>
+                <option value="เครื่องประดับ">เครื่องประดับ</option>
+                <option value="นาฬิกา">นาฬิกา</option>
+                <option value="กีฬา">กีฬา</option>
+                <option value="เครื่องใช้ไฟฟ้า">เครื่องใช้ไฟฟ้า</option>
+                <option value="หนังสือ">หนังสือ</option>
+                <option value="เฟอร์นิเจอร์">เฟอร์นิเจอร์</option>
+                <option value="เครื่องดนตรี">เครื่องดนตรี</option>
+                <option value="ของเล่น">ของเล่น</option>
+                <option value="สุขภาพและความงาม">สุขภาพและความงาม</option>
+                <option value="อื่นๆ">อื่นๆ</option>
               </select>
               {errors.category && <p className="error">{errors.category}</p>}
             </div>

@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
-import { FaUser } from "react-icons/fa";
+import { useEffect, useState, useRef } from "react";
+import { FaUser, FaThumbsUp, FaThumbsDown, FaCamera } from "react-icons/fa";
 import Navbar from "../components/Navbar";
 import AuctionCard from "../components/AuctionCard";
 import FloatingChat from "../components/FloatingChat";
 import api from "../api";
+import "./CSS/ProfileBidder.css";
 
 const ProfileSeller = () => {
   const [user, setUser] = useState({});
@@ -13,7 +14,10 @@ const ProfileSeller = () => {
   const [success, setSuccess] = useState("");
   const [activeListings, setActiveListings] = useState([]);
   const [historyListings, setHistoryListings] = useState([]);
-
+  const [likes, setLikes] = useState(0);
+  const [dislikes, setDislikes] = useState(0);
+  const [imagePreview, setImagePreview] = useState(null);
+  const imageInputRef = useRef(null);
 
   useEffect(() => {
     fetchUser();
@@ -22,6 +26,7 @@ const ProfileSeller = () => {
   useEffect(() => {
     if (user.id) {
       fetchListings();
+      fetchLikes();
     }
   }, [user.id]);
 
@@ -44,29 +49,33 @@ const ProfileSeller = () => {
       const res = await api.get("/auctions/my-listings");
       const myAuctions = res.data;
       const now = new Date();
-
-      // แสดงรายการของ seller ให้ครบถ้วน: ทั้งก่อนเวลาเปิดและกำลังประมูล
-      setActiveListings(
-        myAuctions.filter(a => {
-          const end = new Date(a.end_time);
-          return end > now;
-        })
-      );
-
-      // ประวัติรายการที่ปิดประมูลแล้ว
-      setHistoryListings(
-        myAuctions.filter(a => {
-          const end = new Date(a.end_time);
-          return end <= now;
-        })
-      );
+      setActiveListings(myAuctions.filter(a => new Date(a.end_time) > now));
+      setHistoryListings(myAuctions.filter(a => new Date(a.end_time) <= now));
     } catch (err) {
       setActiveListings([]);
       setHistoryListings([]);
     }
   };
 
+  const fetchLikes = async () => {
+    try {
+      const res = await api.get(`/users/${user.id}/public-profile`);
+      setLikes(res.data.likes || 0);
+      setDislikes(res.data.dislikes || 0);
+    } catch {}
+  };
+
   const updateProfile = async () => {
+    setError("");
+    setSuccess("");
+    if (!form.display_name || !form.email) {
+      setError("ชื่อและอีเมลจำเป็น");
+      return;
+    }
+    if (form.password && form.password.length < 8) {
+      setError("รหัสผ่านต้องมีอย่างน้อย 8 ตัว");
+      return;
+    }
     if (form.password !== form.confirmPassword) {
       setError("รหัสผ่านไม่ตรงกัน");
       return;
@@ -75,7 +84,8 @@ const ProfileSeller = () => {
       const res = await api.put("/update-profile", {
         display_name: form.display_name,
         email: form.email,
-        password: form.password || undefined
+        password: form.password || undefined,
+        profile_image: imagePreview !== null ? imagePreview : undefined
       });
       setSuccess(res.data.message || "แก้ไขสำเร็จ");
       setTimeout(() => {
@@ -89,86 +99,128 @@ const ProfileSeller = () => {
     }
   };
 
+  const formatDate = (d) => {
+    if (!d) return "-";
+    return new Date(d).toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
+  };
+
   return (
     <>
       <Navbar />
       <div className="profile-header">
         <div className="avatar">
-          <FaUser />
+          {user.profile_image ? (
+            <img src={user.profile_image} alt="profile" className="avatar-img" />
+          ) : (
+            <FaUser />
+          )}
         </div>
-        <div className="profile-info">
-          <h2>{user.display_name}</h2>
-          <p>{user.email}</p>
+        <h2>{user.display_name}</h2>
+        <p className="profile-member-date">สมาชิกตั้งแต่: {formatDate(user.created_at)}</p>
+        <div style={{ display: "flex", gap: 20, justifyContent: "center", margin: "8px 0" }}>
+          <span style={{ color: "#2e7d32", display: "flex", alignItems: "center", gap: 6, fontSize: 18 }}>
+            <FaThumbsUp /> {likes}
+          </span>
+          <span style={{ color: "#c62828", display: "flex", alignItems: "center", gap: 6, fontSize: 18 }}>
+            <FaThumbsDown /> {dislikes}
+          </span>
         </div>
-        <button className="edit-btn" onClick={() => setShowEdit(true)}>
-          แก้ไขโปรไฟล์
-        </button>
+        <div className="profile-actions">
+          <button className="edit-btn" onClick={() => setShowEdit(true)}>
+            แก้ไขโปรไฟล์
+          </button>
+        </div>
       </div>
+
+      {/* POPUP EDIT PROFILE - same style as Bidder */}
       {showEdit && (
-        <div className="edit-popup">
-          <div className="edit-card">
-            <h3>แก้ไขโปรไฟล์</h3>
+        <div className="modal-overlay">
+          <div className="edit-modal">
+            <div className="modal-header">
+              <button className="save-btn" onClick={updateProfile}>แก้ไข</button>
+              <span className="close-btn" onClick={() => setShowEdit(false)}>✕</span>
+            </div>
+
+            {error && <div className="error-message">{error}</div>}
+            {success && <div className="success-message">{success}</div>}
+
+            <div className="edit-avatar-section">
+              <div className="edit-avatar">
+                {(imagePreview || user.profile_image) ? (
+                  <img src={imagePreview || user.profile_image} alt="profile" className="avatar-img" />
+                ) : (
+                  <FaUser />
+                )}
+                <button className="edit-avatar-btn" onClick={() => imageInputRef.current?.click()}>
+                  <FaCamera />
+                </button>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                ref={imageInputRef}
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = () => setImagePreview(reader.result);
+                    reader.readAsDataURL(file);
+                  }
+                }}
+              />
+            </div>
+
+            <label>ชื่อที่แสดง:</label>
             <input
-              placeholder="ชื่อที่แสดง"
               value={form.display_name}
               onChange={e => setForm({ ...form, display_name: e.target.value })}
             />
+
+            <label>อีเมล:</label>
             <input
-              placeholder="อีเมล"
               value={form.email}
               onChange={e => setForm({ ...form, email: e.target.value })}
             />
+
+            <label>รหัสผ่าน:</label>
             <input
               type="password"
-              placeholder="รหัสผ่านใหม่ (ถ้าเปลี่ยน)"
-              value={form.password}
+              placeholder="เปลี่ยนรหัสผ่าน..."
               onChange={e => setForm({ ...form, password: e.target.value })}
             />
+
+            <label>ยืนยันรหัสผ่าน:</label>
             <input
               type="password"
-              placeholder="ยืนยันรหัสผ่าน"
-              value={form.confirmPassword}
+              placeholder="ยืนยันการเปลี่ยนรหัสผ่าน..."
               onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
             />
-            {error && <p className="error">{error}</p>}
-            {success && <p className="success">{success}</p>}
-            <div className="edit-actions">
-              <button className="primary" onClick={updateProfile}>บันทึก</button>
-              <button className="secondary" onClick={() => setShowEdit(false)}>ยกเลิก</button>
-            </div>
           </div>
         </div>
       )}
+
       {/* โพสต์ที่เปิดประมูล */}
-<div className="profile-listings">
-  <h3>โพสต์ที่เปิดประมูล</h3>
+      <div className="profile-container">
+        <h3>โพสต์ที่เปิดประมูล</h3>
+        <div className="auction-grid">
+          {activeListings.length > 0 ? (
+            activeListings.map(item => <AuctionCard key={item.id} item={item} />)
+          ) : (
+            <p>ยังไม่มีรายการ</p>
+          )}
+        </div>
 
-  <div className="auction-grid">
-    {activeListings.length > 0 ? (
-      activeListings.map(item => (
-        <AuctionCard key={item.id} item={item} />
-      ))
-    ) : (
-      <p>ยังไม่มีรายการ</p>
-    )}
-  </div>
-</div>
-
-
-{/* ประวัติโพสต์ที่เปิดประมูล */}
-<div className="profile-history">
-  <h3>ประวัติโพสต์ที่เปิดประมูล</h3>
-
-  <div className="auction-grid">
-    {historyListings.length > 0 ? (
-      historyListings.map(item => (
-        <AuctionCard key={item.id} item={item} />
-      ))
-    ) : (
-      <p>ยังไม่มีประวัติ</p>
-    )}
-  </div>
-</div>
+        {/* ประวัติโพสต์ที่เปิดประมูล */}
+        <h3 style={{ marginTop: 30 }}>ประวัติโพสต์ที่เปิดประมูล</h3>
+        <div className="auction-grid">
+          {historyListings.length > 0 ? (
+            historyListings.map(item => <AuctionCard key={item.id} item={item} />)
+          ) : (
+            <p>ยังไม่มีประวัติ</p>
+          )}
+        </div>
+      </div>
 
       <FloatingChat />
     </>

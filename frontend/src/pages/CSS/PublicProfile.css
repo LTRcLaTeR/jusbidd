@@ -1,0 +1,212 @@
+.public-profile-loading {
+  text-align: center;
+  padding: 60px;
+  font-size: 18px;
+  color: #555;
+}
+
+.public-profile-header {
+  text-align: center;
+  padding: 40px;
+  background: #cfe1f2;
+}
+
+.public-profile-header .avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  margin: auto;
+  overflow: hidden;
+}
+
+.public-profile-header .avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.public-profile-header h2 {
+  margin: 12px 0 4px 0;
+}
+
+.public-profile-username {
+  color: #666;
+  margin: 0 0 4px 0;
+}
+
+.public-profile-member {
+  color: #888;
+  font-size: 14px;
+  margin: 0 0 12px 0;
+}
+
+.public-profile-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.public-profile-credits {
+  display: flex;
+  gap: 20px;
+  font-size: 18px;
+}
+
+.credit-like {
+  color: #2e7d32;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.credit-dislike {
+  color: #c62828;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.public-profile-rate-btns {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.rate-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: 2px solid #ccc;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  background: white;
+  transition: all 0.2s;
+}
+
+.rate-btn.rate-like:hover,
+.rate-btn.rate-like.active {
+  background: #e8f5e9;
+  border-color: #2e7d32;
+  color: #2e7d32;
+}
+
+.rate-btn.rate-dislike:hover,
+.rate-btn.rate-dislike.active {
+  background: #ffebee;
+  border-color: #c62828;
+  color: #c62828;
+}
+
+.public-profile-container {
+  padding: 40px;
+}
+
+.public-profile-container h3 {
+  font-size: 20px;
+  color: #1e3a5f;
+  margin-bottom: 20px;
+}
+
+.public-profile-container .auction-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.report-profile-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 8px 20px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.report-profile-btn:hover {
+  background: #c0392b;
+}
+
+/* Reuse modal styles from ProfileBidder */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.edit-modal {
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  width: 400px;
+  max-width: 90%;
+}
+
+.edit-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.edit-modal .close-btn {
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.edit-modal label {
+  display: block;
+  margin-top: 12px;
+  font-weight: 600;
+}
+
+.edit-modal .complaint-select,
+.edit-modal .complaint-textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+.edit-modal .save-btn {
+  background: #1e3a5f;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.edit-modal .error-message {
+  color: #c62828;
+  margin-bottom: 8px;
+}
+
+.edit-modal .success-message {
+  color: #2e7d32;
+  margin-bottom: 8px;
+}

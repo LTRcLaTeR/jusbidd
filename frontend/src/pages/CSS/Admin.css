@@ -491,3 +491,172 @@
   padding: 40px 0;
   font-size: 14px;
 }
+
+/* ============ ADMIN MODALS ============ */
+.admin-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.admin-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 28px;
+  width: 420px;
+  max-width: 92vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.admin-modal-lg {
+  width: 520px;
+}
+
+.admin-modal h3 {
+  margin: 0 0 16px 0;
+  color: #1e3a5f;
+  font-size: 18px;
+}
+
+.admin-modal p {
+  color: #555;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.admin-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.admin-modal-header h3 {
+  margin: 0;
+}
+
+.admin-modal-close {
+  cursor: pointer;
+  font-size: 20px;
+  color: #888;
+}
+
+.admin-modal-close:hover {
+  color: #333;
+}
+
+.admin-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.admin-btn-secondary {
+  padding: 8px 20px;
+  background: #ccc;
+  color: #333;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.admin-btn-secondary:hover {
+  background: #bbb;
+}
+
+/* Admin user profile card in modal */
+.admin-user-profile-card {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 16px;
+  background: #f5f8fb;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.admin-user-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #cfe1f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #1e3a5f;
+  flex-shrink: 0;
+}
+
+.admin-user-info h4 {
+  margin: 0 0 4px 0;
+  color: #1e3a5f;
+  font-size: 16px;
+}
+
+.admin-user-info p {
+  margin: 2px 0;
+  font-size: 13px;
+  color: #555;
+}
+
+/* Admin message textarea */
+.admin-message-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.admin-success-msg {
+  background: #d4edda;
+  color: #155724;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  border: 1px solid #c3e6cb;
+}
+
+.admin-error-msg {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  border: 1px solid #f5c6cb;
+}
+
+/* ============ ADMIN REPORTS DETAIL ============ */
+.report-detail-type {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e3a5f;
+  margin-bottom: 8px;
+}
+
+.report-detail-target {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.report-detail-date {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 12px;
+}

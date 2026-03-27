@@ -1,9 +1,23 @@
 import { useEffect, useState } from "react";
+import { FaUser, FaThumbsUp, FaThumbsDown } from "react-icons/fa";
 import api from "../api";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
+
+  // Confirm dialog state
+  const [confirmAction, setConfirmAction] = useState(null); // { type: 'suspend'|'activate', userId, userName }
+
+  // View profile state
+  const [viewUser, setViewUser] = useState(null);
+  const [viewLoading, setViewLoading] = useState(false);
+
+  // Send message state
+  const [showMessage, setShowMessage] = useState(null); // user object
+  const [messageText, setMessageText] = useState("");
+  const [messageSuccess, setMessageSuccess] = useState("");
+  const [messageError, setMessageError] = useState("");
 
   useEffect(() => {
     fetchUsers();
@@ -32,6 +46,7 @@ export default function AdminUsers() {
     try {
       await api.put(`/admin/users/${userId}/suspend`);
       fetchUsers(search.trim() || undefined);
+      setConfirmAction(null);
     } catch (err) {
       console.error(err);
     }
@@ -41,8 +56,41 @@ export default function AdminUsers() {
     try {
       await api.put(`/admin/users/${userId}/activate`);
       fetchUsers(search.trim() || undefined);
+      setConfirmAction(null);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleViewUser = async (userId) => {
+    setViewLoading(true);
+    try {
+      const res = await api.get(`/admin/users/${userId}`);
+      setViewUser(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setViewLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    setMessageError("");
+    setMessageSuccess("");
+    if (!messageText.trim()) {
+      setMessageError("กรุณากรอกข้อความ");
+      return;
+    }
+    try {
+      await api.post(`/admin/users/${showMessage.id}/message`, { content: messageText });
+      setMessageSuccess("ส่งข้อความสำเร็จ");
+      setMessageText("");
+      setTimeout(() => {
+        setShowMessage(null);
+        setMessageSuccess("");
+      }, 1500);
+    } catch (err) {
+      setMessageError(err.response?.data?.message || "ส่งข้อความไม่สำเร็จ");
     }
   };
 
@@ -50,6 +98,11 @@ export default function AdminUsers() {
     if (role === "bidder") return "Buyer";
     if (role === "seller") return "Seller";
     return role;
+  };
+
+  const formatDate = (d) => {
+    if (!d) return "-";
+    return new Date(d).toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
   };
 
   return (
@@ -96,11 +149,15 @@ export default function AdminUsers() {
                   </span>
                 </td>
                 <td>
-                  <button className="btn-view">View</button>
+                  <button className="btn-view" onClick={() => handleViewUser(u.id)}>View</button>
                   {u.status === "suspended" ? (
-                    <button className="btn-activate" onClick={() => handleActivate(u.id)}>Activate</button>
+                    <button className="btn-activate" onClick={() => setConfirmAction({ type: 'activate', userId: u.id, userName: u.display_name })}>
+                      Activate
+                    </button>
                   ) : (
-                    <button className="btn-suspend" onClick={() => handleSuspend(u.id)}>Suspend</button>
+                    <button className="btn-suspend" onClick={() => setConfirmAction({ type: 'suspend', userId: u.id, userName: u.display_name })}>
+                      Suspend
+                    </button>
                   )}
                 </td>
               </tr>
@@ -113,6 +170,121 @@ export default function AdminUsers() {
           </tbody>
         </table>
       </div>
+
+      {/* Confirm Suspend/Activate Dialog */}
+      {confirmAction && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal">
+            <h3>
+              {confirmAction.type === 'suspend'
+                ? '⚠️ ยืนยันการระงับบัญชี'
+                : '✅ ยืนยันการเปิดใช้งานบัญชี'}
+            </h3>
+            <p>
+              {confirmAction.type === 'suspend'
+                ? `คุณต้องการระงับบัญชีผู้ใช้ "${confirmAction.userName}" ใช่หรือไม่?`
+                : `คุณต้องการเปิดใช้งานบัญชี "${confirmAction.userName}" ใช่หรือไม่?`}
+            </p>
+            <div className="admin-modal-actions">
+              <button
+                className="admin-btn-primary"
+                onClick={() => {
+                  if (confirmAction.type === 'suspend') handleSuspend(confirmAction.userId);
+                  else handleActivate(confirmAction.userId);
+                }}
+              >
+                ยืนยัน
+              </button>
+              <button className="admin-btn-secondary" onClick={() => setConfirmAction(null)}>
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View User Profile Modal */}
+      {viewUser && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal admin-modal-lg">
+            <div className="admin-modal-header">
+              <h3>โปรไฟล์ผู้ใช้</h3>
+              <span className="admin-modal-close" onClick={() => setViewUser(null)}>✕</span>
+            </div>
+
+            {viewLoading ? (
+              <p>กำลังโหลด...</p>
+            ) : (
+              <>
+                <div className="admin-user-profile-card">
+                  <div className="admin-user-avatar"><FaUser /></div>
+                  <div className="admin-user-info">
+                    <h4>{viewUser.display_name}</h4>
+                    <p>@{viewUser.username}</p>
+                    <p>{viewUser.email}</p>
+                    <p>บทบาท: {getRoleThai(viewUser.role)}</p>
+                    <p>สมาชิกตั้งแต่: {formatDate(viewUser.created_at)}</p>
+                    <p>สถานะ: <span className={`status-badge status-${viewUser.status}`}>{viewUser.status}</span></p>
+                    {viewUser.role === 'bidder' && (
+                      <p>จำนวนครั้งที่ชนะการประมูล: {viewUser.win_count} ครั้ง</p>
+                    )}
+                    {viewUser.role === 'seller' && (
+                      <>
+                        <p>จำนวนโพสต์: {viewUser.auction_count} รายการ</p>
+                        <div style={{ display: "flex", gap: 16, marginTop: 4 }}>
+                          <span style={{ color: "#2e7d32", display: "flex", alignItems: "center", gap: 4 }}>
+                            <FaThumbsUp /> {viewUser.likes}
+                          </span>
+                          <span style={{ color: "#c62828", display: "flex", alignItems: "center", gap: 4 }}>
+                            <FaThumbsDown /> {viewUser.dislikes}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="admin-modal-actions">
+                  <button className="admin-btn-primary" onClick={() => { setShowMessage(viewUser); setViewUser(null); }}>
+                    ส่งข้อความ
+                  </button>
+                  <button className="admin-btn-secondary" onClick={() => setViewUser(null)}>
+                    ปิด
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Send Message Modal */}
+      {showMessage && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal">
+            <div className="admin-modal-header">
+              <h3>ส่งข้อความถึง {showMessage.display_name}</h3>
+              <span className="admin-modal-close" onClick={() => { setShowMessage(null); setMessageText(""); setMessageError(""); setMessageSuccess(""); }}>✕</span>
+            </div>
+
+            {messageSuccess && <div className="admin-success-msg">{messageSuccess}</div>}
+            {messageError && <div className="admin-error-msg">{messageError}</div>}
+
+            <textarea
+              className="admin-message-textarea"
+              placeholder="พิมพ์ข้อความ..."
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              rows={4}
+            />
+
+            <div className="admin-modal-actions">
+              <button className="admin-btn-primary" onClick={handleSendMessage}>ส่งข้อความ</button>
+              <button className="admin-btn-secondary" onClick={() => { setShowMessage(null); setMessageText(""); }}>ยกเลิก</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -10,7 +10,7 @@ router.get("/", async (req, res) => {
 
     let query = `
       SELECT * FROM auctions
-      WHERE status = 'active' AND (end_time > NOW() OR end_time > NOW() - INTERVAL '1 day')
+      WHERE status = 'active' AND end_time > NOW() - INTERVAL '1 day'
     `;
 
     let values = [];

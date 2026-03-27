@@ -345,6 +345,54 @@
   opacity: 0.85;
 }
 
+/* === Seller profile button on card === */
+.seller-profile-btn {
+  width: 100%;
+  padding: 8px;
+  margin-top: 6px;
+  background: linear-gradient(135deg, #43a047 0%, #1b5e20 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: opacity 0.2s;
+}
+.seller-profile-btn:hover {
+  opacity: 0.85;
+}
+
+/* === Post-auction info === */
+.winner-price-text {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: #ffe082;
+}
+
+.post-auction-info {
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.post-auction-title {
+  margin: 0 0 4px 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #90caf9;
+}
+
+.post-auction-steps {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 11px;
+  color: #e0e0e0;
+  line-height: 1.6;
+}
+
 /* === Edit auction button on card === */
 .edit-auction-btn {
   width: 100%;

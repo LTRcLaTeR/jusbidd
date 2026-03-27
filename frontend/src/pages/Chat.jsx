@@ -36,7 +36,16 @@ export default function Chat() {
     }
   };
 
+  const isOtherAdmin = otherUser.role_id === 3;
+
+  const handleProfileClick = () => {
+    if (!isOtherAdmin) {
+      navigate(`/profile/${otherUserId}`);
+    }
+  };
+
   const fetchAuction = async () => {
+    if (auctionId === '0' || auctionId === 'null') return;
     try {
       const res = await api.get(`/auctions/${auctionId}`);
       setAuction(res.data);
@@ -58,7 +67,7 @@ export default function Chat() {
     if (!newMessage.trim()) return;
     try {
       await api.post("/messages", {
-        auction_id: Number(auctionId),
+        auction_id: (auctionId === '0' || auctionId === 'null') ? 0 : Number(auctionId),
         receiver_id: Number(otherUserId),
         content: newMessage.trim()
       });
@@ -83,7 +92,7 @@ export default function Chat() {
     reader.onload = async () => {
       try {
         await api.post("/messages", {
-          auction_id: Number(auctionId),
+          auction_id: (auctionId === '0' || auctionId === 'null') ? 0 : Number(auctionId),
           receiver_id: Number(otherUserId),
           content: "",
           image: reader.result
@@ -111,10 +120,12 @@ export default function Chat() {
       {/* Header */}
       <div className="chat-header">
         <div className="chat-header-left">
-          <div className="chat-avatar">
+          <div className="chat-avatar" onClick={handleProfileClick} style={!isOtherAdmin ? { cursor: "pointer" } : {}}>
             <FaUser />
           </div>
-          <span className="chat-other-name">{otherUser.display_name || "..."}</span>
+          <span className="chat-other-name" onClick={handleProfileClick} style={!isOtherAdmin ? { cursor: "pointer" } : {}}>
+            {otherUser.display_name || "..."}
+          </span>
           <span className="chat-back" onClick={() => navigate(-1)}>›</span>
         </div>
       </div>

@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react";
-import { FaUser } from "react-icons/fa";
+import { useEffect, useState, useRef } from "react";
+import { FaUser, FaCamera } from "react-icons/fa";
 import api from "../api";
 import Navbar from "../components/Navbar";
 import AuctionCard from "../components/AuctionCard";
+import FloatingChat from "../components/FloatingChat";
 import "./CSS/ProfileBidder.css";
 
 export default function Profile() {
 
-  const [user, setUser] = useState({ display_name: "", email: "" });
-  const [bids, setBids] = useState([]);
+  const [user, setUser] = useState({ display_name: "", email: "", created_at: "" });
   const [wonAuctions, setWonAuctions] = useState([]);
 
   const [showEdit, setShowEdit] = useState(false);
@@ -20,10 +20,11 @@ export default function Profile() {
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [imagePreview, setImagePreview] = useState(null);
+  const imageInputRef = useRef(null);
 
   useEffect(() => {
     fetchUser();
-    fetchBids();
     fetchWonAuctions();
   }, []);
 
@@ -39,15 +40,6 @@ export default function Profile() {
         confirmPassword: ""
       });
 
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchBids = async () => {
-    try {
-      const res = await api.get("/auctions/my-bids");
-      setBids(res.data);
     } catch (err) {
       console.error(err);
     }
@@ -85,7 +77,8 @@ export default function Profile() {
       const res = await api.put("/update-profile", {
         display_name: form.display_name,
         email: form.email,
-        password: form.password || undefined
+        password: form.password || undefined,
+        profile_image: imagePreview !== null ? imagePreview : undefined
       });
 
       setSuccess(res.data.message || "แก้ไขสำเร็จ");
@@ -101,6 +94,11 @@ export default function Profile() {
     }
   };
 
+  const formatDate = (d) => {
+    if (!d) return "-";
+    return new Date(d).toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
+  };
+
   return (
     <>
       <Navbar />
@@ -108,19 +106,25 @@ export default function Profile() {
       <div className="profile-header">
 
         <div className="avatar">
-          <FaUser />
+          {user.profile_image ? (
+            <img src={user.profile_image} alt="profile" className="avatar-img" />
+          ) : (
+            <FaUser />
+          )}
         </div>
 
         <h2>{user.display_name}</h2>
 
-        <p>จำนวนการประมูล: {bids.length}</p>
+        <p className="profile-member-date">สมาชิกตั้งแต่: {formatDate(user.created_at)}</p>
 
-        <button
-          className="edit-btn"
-          onClick={() => setShowEdit(true)}
-        >
-          แก้ไขโปรไฟล์
-        </button>
+        <div className="profile-actions">
+          <button
+            className="edit-btn"
+            onClick={() => setShowEdit(true)}
+          >
+            แก้ไขโปรไฟล์
+          </button>
+        </div>
 
       </div>
 
@@ -135,24 +139,6 @@ export default function Profile() {
             ))
           ) : (
             <p>ยังไม่มีรายการที่ชนะ</p>
-          )}
-        </div>
-
-        <h3 style={{ marginTop: 30 }}>ประวัติการประมูล</h3>
-
-        <div className="auction-grid">
-          {bids.length > 0 ? (
-            bids.map((bid) => (
-              <div key={bid.id} className="auction-card">
-                <img src={bid.image} alt={bid.title} />
-                <div className="card-info">
-                  <p>{bid.title}</p>
-                  <p>ราคาที่ประมูล {bid.bid_amount} บาท</p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p>ยังไม่มีประวัติ</p>
           )}
         </div>
 
@@ -180,6 +166,33 @@ export default function Profile() {
 
             {error && <div className="error-message">{error}</div>}
             {success && <div className="success-message">{success}</div>}
+
+            <div className="edit-avatar-section">
+              <div className="edit-avatar">
+                {(imagePreview || user.profile_image) ? (
+                  <img src={imagePreview || user.profile_image} alt="profile" className="avatar-img" />
+                ) : (
+                  <FaUser />
+                )}
+                <button className="edit-avatar-btn" onClick={() => imageInputRef.current?.click()}>
+                  <FaCamera />
+                </button>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                ref={imageInputRef}
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = () => setImagePreview(reader.result);
+                    reader.readAsDataURL(file);
+                  }
+                }}
+              />
+            </div>
 
             <label>ชื่อที่แสดง:</label>
             <input
@@ -219,6 +232,8 @@ export default function Profile() {
 
         </div>
       )}
+
+      <FloatingChat />
     </>
   );
 }

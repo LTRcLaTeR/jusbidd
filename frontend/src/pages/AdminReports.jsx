@@ -5,6 +5,7 @@ export default function AdminReports() {
   const [reports, setReports] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedReport, setSelectedReport] = useState(null);
+  const [filterStatus, setFilterStatus] = useState("all");
 
   useEffect(() => {
     fetchReports();
@@ -26,6 +27,7 @@ export default function AdminReports() {
 
   const handleShowAll = () => {
     setSearch("");
+    setFilterStatus("all");
     fetchReports();
   };
 
@@ -33,14 +35,18 @@ export default function AdminReports() {
     try {
       await api.put(`/admin/reports/${id}`, { status });
       fetchReports(search.trim() || undefined);
+      if (selectedReport && selectedReport.id === id) {
+        setSelectedReport({ ...selectedReport, status });
+      }
     } catch (err) {
       console.error(err);
     }
   };
 
   const getStatusBadge = (status) => {
-    if (status === "pending") return <span className="status-badge status-pending">รอ</span>;
+    if (status === "pending") return <span className="status-badge status-pending">รอดำเนินการ</span>;
     if (status === "resolved") return <span className="status-badge status-resolved">แก้ไขแล้ว</span>;
+    if (status === "rejected") return <span className="status-badge" style={{ background: "#e57373", color: "#fff" }}>ปฏิเสธ</span>;
     return <span className="status-badge">{status}</span>;
   };
 
@@ -50,17 +56,32 @@ export default function AdminReports() {
     return dt.toLocaleString("th-TH", { dateStyle: "short", timeStyle: "medium" });
   };
 
+  const filteredReports = filterStatus === "all"
+    ? reports
+    : reports.filter(r => r.status === filterStatus);
+
   return (
     <>
       <div className="admin-page-header">
         <div className="admin-page-header-left">
-          <h2>คำร้องเรียน และ ข้อพิพาท</h2>
-          <p>รับเรื่อง → ตรวจสอบ→ ตัดสิน</p>
+          <h2>กล่องรับแจ้งคำร้องเรียน</h2>
+          <p>รับเรื่อง → ตรวจสอบ → ตัดสิน</p>
         </div>
         <div className="admin-page-header-right">
+          <select
+            className="admin-search-input"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            style={{ width: 140 }}
+          >
+            <option value="all">ทั้งหมด</option>
+            <option value="pending">รอดำเนินการ</option>
+            <option value="resolved">แก้ไขแล้ว</option>
+            <option value="rejected">ปฏิเสธ</option>
+          </select>
           <input
             className="admin-search-input"
-            placeholder="ค้นหา ID"
+            placeholder="ค้นหา ID หรือประเภท"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -85,12 +106,12 @@ export default function AdminReports() {
                 </tr>
               </thead>
               <tbody>
-                {reports.map((r) => (
-                  <tr key={r.id}>
+                {filteredReports.map((r) => (
+                  <tr key={r.id} className={selectedReport?.id === r.id ? "selected-row" : ""}>
                     <td>R{String(r.id).padStart(3, "0")}</td>
                     <td>{r.report_type}</td>
-                    <td>U{r.reporter_id}</td>
-                    <td>{r.target_id}</td>
+                    <td>{r.reporter_name} (U{r.reporter_id})</td>
+                    <td>{r.target_name ? `${r.target_name} (U${r.target_id})` : r.target_id}</td>
                     <td>{getStatusBadge(r.status)}</td>
                     <td>{formatDate(r.created_at)}</td>
                     <td>
@@ -98,7 +119,7 @@ export default function AdminReports() {
                     </td>
                   </tr>
                 ))}
-                {reports.length === 0 && (
+                {filteredReports.length === 0 && (
                   <tr>
                     <td colSpan={7} style={{ textAlign: "center", color: "#aaa" }}>ไม่มีคำร้องเรียน</td>
                   </tr>
@@ -110,17 +131,37 @@ export default function AdminReports() {
 
         {/* Detail Panel */}
         <div className="admin-report-detail-panel">
-          <h3>คำร้องเรียน</h3>
+          <h3>รายละเอียดคำร้องเรียน</h3>
           {selectedReport ? (
             <>
-              <div className="report-detail-from">จาก U{selectedReport.reporter_id}</div>
+              <div className="report-detail-type">ประเภท: {selectedReport.report_type}</div>
+              <div className="report-detail-from">
+                จาก: {selectedReport.reporter_name} (U{selectedReport.reporter_id})
+              </div>
+              {selectedReport.reporter_email && (
+                <div className="report-detail-from">อีเมล: {selectedReport.reporter_email}</div>
+              )}
+              <div className="report-detail-target">เป้าหมาย: {selectedReport.target_name ? `${selectedReport.target_name} (@${selectedReport.target_username})` : selectedReport.target_id}</div>
+              <div className="report-detail-date">วันที่: {formatDate(selectedReport.created_at)}</div>
+              <div style={{ marginBottom: 8 }}>สถานะ: {getStatusBadge(selectedReport.status)}</div>
               <div className="report-detail-content">
+                <strong>รายละเอียด:</strong><br />
                 {selectedReport.description || "ไม่มีรายละเอียด"}
               </div>
-              <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+              <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {selectedReport.status === "pending" && (
-                  <button className="admin-btn-primary" onClick={() => handleUpdateStatus(selectedReport.id, "resolved")}>
-                    แก้ไขแล้ว
+                  <>
+                    <button className="admin-btn-primary" onClick={() => handleUpdateStatus(selectedReport.id, "resolved")}>
+                      ✅ แก้ไขแล้ว
+                    </button>
+                    <button className="admin-btn-secondary" onClick={() => handleUpdateStatus(selectedReport.id, "rejected")} style={{ background: "#e57373", color: "#fff" }}>
+                      ❌ ปฏิเสธ
+                    </button>
+                  </>
+                )}
+                {selectedReport.status !== "pending" && (
+                  <button className="admin-btn-secondary" onClick={() => handleUpdateStatus(selectedReport.id, "pending")}>
+                    🔄 กลับไปรอดำเนินการ
                   </button>
                 )}
               </div>

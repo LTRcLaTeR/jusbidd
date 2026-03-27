@@ -3,7 +3,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import HomeBidder from "./pages/HomeBidder";
 import HomeSeller from "./pages/HomeSeller";
-import Admin from "./pages/Admin";
+import HomeAdmin from "./pages/HomeAdmin";
 import ProfileBidder from "./pages/ProfileBidder";
 import ProfileSeller from "./pages/ProfileSeller";
 import CreateAuction from "./pages/CreateAuction";
@@ -26,7 +26,7 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/home-bidder" element={<HomeBidder />} />
       <Route path="/home-seller" element={<HomeSeller />} />
-      <Route path="/home-admin" element={<PrivateRoute><Admin /></PrivateRoute>} />
+      <Route path="/home-admin" element={<HomeAdmin />} />
       <Route path="/profile" element={<ProfileBidder />} />
       <Route path="/profile-seller" element={<ProfileSeller />} />
       <Route path="/create-auction" element={<PrivateRoute><CreateAuction /></PrivateRoute>} />

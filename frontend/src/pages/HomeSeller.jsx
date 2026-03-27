@@ -6,25 +6,44 @@ import AuctionCard from "../components/AuctionCard";
 import FloatingChat from "../components/FloatingChat";
 import "./CSS/Home.css";
 
-const CATEGORIES = ["ของสะสม", "อิเล็กทรอนิกส์", "แฟชั่น", "ศิลปะ", "ยานพาหนะ"];
+const CATEGORIES = [
+  "ของสะสม", "อิเล็กทรอนิกส์", "แฟชั่น", "ศิลปะ", "ยานพาหนะ",
+  "เครื่องประดับ", "นาฬิกา", "กีฬา", "เครื่องใช้ไฟฟ้า", "หนังสือ",
+  "เฟอร์นิเจอร์", "เครื่องดนตรี", "ของเล่น", "สุขภาพและความงาม", "อื่นๆ"
+];
 
 export default function HomeSeller() {
-  const [auctions, setAuctions] = useState([]);
+  const [myAuctions, setMyAuctions] = useState([]);
+  const [allAuctions, setAllAuctions] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState("all"); // "all" or "mine"
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchAuctions();
+    fetchMyAuctions();
+    fetchAllAuctions();
   }, [selectedCategory, searchQuery]);
 
-  const fetchAuctions = async () => {
+  const fetchMyAuctions = async () => {
     try {
       const params = {};
       if (searchQuery) params.search = searchQuery;
       if (selectedCategory) params.category = selectedCategory;
       const res = await api.get("/auctions/my-listings", { params });
-      setAuctions(res.data);
+      setMyAuctions(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchAllAuctions = async () => {
+    try {
+      const params = {};
+      if (searchQuery) params.search = searchQuery;
+      if (selectedCategory) params.category = selectedCategory;
+      const res = await api.get("/auctions", { params });
+      setAllAuctions(res.data);
     } catch (err) {
       console.error(err);
     }
@@ -34,6 +53,8 @@ export default function HomeSeller() {
     setSelectedCategory(prev => prev === cat ? "" : cat);
   };
 
+  const displayAuctions = viewMode === "mine" ? myAuctions : allAuctions;
+
   return (
     <>
       <Navbar onSearch={setSearchQuery} />
@@ -41,6 +62,22 @@ export default function HomeSeller() {
       <div className="home-container">
 
         <h1 className="home-title">Jus(tice) Bid</h1>
+
+        {/* View mode toggle */}
+        <div className="seller-view-toggle">
+          <button
+            className={`view-toggle-btn${viewMode === "all" ? " active" : ""}`}
+            onClick={() => setViewMode("all")}
+          >
+            สินค้าทั้งหมด
+          </button>
+          <button
+            className={`view-toggle-btn${viewMode === "mine" ? " active" : ""}`}
+            onClick={() => setViewMode("mine")}
+          >
+            สินค้าของฉัน
+          </button>
+        </div>
 
         <div className="category-section">
           {CATEGORIES.map(cat => (
@@ -54,10 +91,12 @@ export default function HomeSeller() {
           ))}
         </div>
 
-        <h2 className="auction-header">รายการประมูล</h2>
+        <h2 className="auction-header">
+          {viewMode === "mine" ? "รายการประมูลของฉัน" : "รายการประมูลทั้งหมด"}
+        </h2>
 
         <div className="auction-grid">
-          {auctions
+          {displayAuctions
             .filter((item) => {
               const now = new Date();
               const start = new Date(item.start_time);

@@ -134,6 +134,10 @@ export default function AuctionCard({ item }) {
     navigate(`/chat/${item.id}/${item.seller_id}`);
   };
 
+  const handleViewSellerProfile = () => {
+    navigate(`/profile/${item.seller_id}`);
+  };
+
   const handleChatWinner = () => {
     if (winnerId) {
       navigate(`/chat/${item.id}/${winnerId}`);
@@ -182,11 +186,28 @@ export default function AuctionCard({ item }) {
             <button className="bid-btn" onClick={() => setShowBidPopup(true)}>เริ่มประมูล</button>
           )}
           {status === "after" && winnerName && (
-            <p className="winner-text">ผู้ชนะ: {winnerName}</p>
+            <>
+              <p className="winner-text">ผู้ชนะ: {winnerName}</p>
+              <p className="winner-price-text">ราคาสุดท้าย: {currentBid.toLocaleString()} บาท</p>
+              <div className="post-auction-info">
+                <p className="post-auction-title">ขั้นตอนถัดไป:</p>
+                <ol className="post-auction-steps">
+                  <li>ติดต่อผู้ขายผ่านแชทเพื่อนัดหมาย</li>
+                  <li>ตกลงวิธีการชำระเงินกับผู้ขาย</li>
+                  <li>ยืนยันการรับสินค้าและตรวจสอบ</li>
+                </ol>
+              </div>
+            </>
           )}
           {/* Bidder winner: chat with seller */}
           {status === "after" && isBidder && isWinner && (
             <button className="chat-btn-card" onClick={handleChatSeller}>💬 แชทกับผู้ขาย</button>
+          )}
+          {/* View seller profile */}
+          {item.seller_id && (
+            <button className="seller-profile-btn" onClick={handleViewSellerProfile}>
+              👤 ดูโปรไฟล์ผู้ขาย
+            </button>
           )}
           {/* Seller: chat with winner */}
           {status === "after" && isSeller && winnerId && (
@@ -233,8 +254,8 @@ export default function AuctionCard({ item }) {
               {/* Left: image */}
               <div className="bid-popup-left">
                 <img src={item.image} alt={item.title} className="bid-popup-img-new" />
-                <div className="bid-popup-seller-row">
-                  <span>ผู้ขาย: {item.seller_username || "-"}</span>
+                <div className="bid-popup-seller-row" onClick={handleViewSellerProfile} style={{ cursor: "pointer" }}>
+                  <span>ผู้ขาย: {item.seller_username || "-"} 👤</span>
                 </div>
               </div>
 

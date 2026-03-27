@@ -5,6 +5,7 @@ import AdminHome from "./AdminHome";
 import AdminUsers from "./AdminUsers";
 import AdminReports from "./AdminReports";
 import AdminAuctionLogs from "./AdminAuctionLogs";
+import FloatingChat from "../components/FloatingChat";
 import logo from "../assets/logo.png";
 import "./CSS/Admin.css";
 
@@ -76,6 +77,8 @@ export default function Admin() {
           {renderContent()}
         </main>
       </div>
+
+      <FloatingChat />
     </div>
   );
 }

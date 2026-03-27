@@ -2,9 +2,14 @@ import { useEffect, useState } from "react";
 import api from "../api";
 import Navbar from "../components/Navbar";
 import AuctionCard from "../components/AuctionCard";
+import FloatingChat from "../components/FloatingChat";
 import "./CSS/Home.css";
 
-const CATEGORIES = ["ของสะสม", "อิเล็กทรอนิกส์", "แฟชั่น", "ศิลปะ", "ยานพาหนะ"];
+const CATEGORIES = [
+  "ของสะสม", "อิเล็กทรอนิกส์", "แฟชั่น", "ศิลปะ", "ยานพาหนะ",
+  "เครื่องประดับ", "นาฬิกา", "กีฬา", "เครื่องใช้ไฟฟ้า", "หนังสือ",
+  "เฟอร์นิเจอร์", "เครื่องดนตรี", "ของเล่น", "สุขภาพและความงาม", "อื่นๆ"
+];
 
 export default function HomeBidder() {
   const [auctions, setAuctions] = useState([]);
@@ -64,6 +69,8 @@ export default function HomeBidder() {
             ))}
         </div>
       </div>
+
+      <FloatingChat />
     </>
   );
 }
