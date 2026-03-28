@@ -31,7 +31,7 @@ export default function PublicProfile() {
       const res = await api.get(`/users/${userId}/public-profile`);
       setProfile(res.data);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to fetch profile:", err.message, err.response?.status, err.response?.data);
     } finally {
       setLoading(false);
     }

@@ -7,8 +7,13 @@ const { authenticate, SECRET } = require("./auth");
 const initDatabase = require("./initDb");
 
 const app = express();
+
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map(s => s.trim())
+  : null;
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || true,
+  origin: allowedOrigins || true,
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' })); // allow larger payloads for image uploads
