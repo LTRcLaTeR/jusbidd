@@ -12,6 +12,7 @@
   width: 450px;
   border-radius: 10px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  box-sizing: border-box;
 }
 
 .logo-section {
@@ -24,24 +25,25 @@
   margin-bottom: 5px;
 }
 
-h2 {
+.register-card h2 {
   text-align: center;
   margin-bottom: 20px;
 }
 
-label {
+.register-card label {
   font-weight: 500;
   display: block;
   margin-top: 15px;
 }
 
-input {
+.register-card input {
   width: 100%;
   padding: 10px;
   margin-top: 5px;
   border-radius: 6px;
   border: 1px solid #aaa;
   background: #e8e1d8;
+  box-sizing: border-box;
 }
 
 .password-hint {
@@ -64,7 +66,18 @@ input {
   margin-top: 20px;
 }
 
-button {
+select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border-radius: 6px;
+  border: 1px solid #aaa;
+  background: #e8e1d8;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.register-card button {
   padding: 10px 20px;
   border-radius: 8px;
   border: none;

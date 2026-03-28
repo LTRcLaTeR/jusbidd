@@ -191,7 +191,7 @@ app.post("/login", async (req, res) => {
 app.get("/me", authenticate, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT id, display_name, username, email, role_id FROM users WHERE id = $1",
+      "SELECT u.id, u.display_name, u.username, u.email, u.profile_image, u.created_at, u.role_id, r.name as role FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = $1",
       [req.userId]
     );
     if (result.rows.length === 0) {
@@ -207,7 +207,7 @@ app.get("/me", authenticate, async (req, res) => {
 // UPDATE PROFILE
 app.put("/update-profile", authenticate, async (req, res) => {
   try {
-    const { display_name, email, password } = req.body;
+    const { display_name, email, password, profile_image } = req.body;
     
     if (!display_name || !email) {
       return res.status(400).json({ message: "display_name และ email จำเป็น" });
@@ -215,6 +215,7 @@ app.put("/update-profile", authenticate, async (req, res) => {
 
     let query = "UPDATE users SET display_name = $1, email = $2";
     let values = [display_name, email];
+    let paramIndex = 3;
 
     // ถ้าหากมีการเปลี่ยนรหัสผ่าน
     if (password) {
@@ -222,11 +223,19 @@ app.put("/update-profile", authenticate, async (req, res) => {
         return res.status(400).json({ message: "รหัสผ่านต้องมีอย่างน้อย 8 ตัว" });
       }
       const hash = await bcrypt.hash(password, 10);
-      query += ", password = $3";
+      query += `, password = $${paramIndex}`;
       values.push(hash);
+      paramIndex++;
     }
 
-    query += ` WHERE id = $${values.length + 1}`;
+    // ถ้าหากมีการเปลี่ยนรูปโปรไฟล์
+    if (profile_image !== undefined) {
+      query += `, profile_image = $${paramIndex}`;
+      values.push(profile_image);
+      paramIndex++;
+    }
+
+    query += ` WHERE id = $${paramIndex}`;
     values.push(req.userId);
 
     await pool.query(query, values);
@@ -243,6 +252,105 @@ app.use("/auctions", auctionRoutes);
 
 const adminRoutes = require("./routes/admin");
 app.use("/admin", adminRoutes);
+
+// ============ PUBLIC PROFILE ============
+
+// Get public profile
+app.get("/users/:userId/public-profile", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const userRes = await pool.query(
+      `SELECT u.id, u.display_name, u.username, u.email, u.profile_image, u.created_at, r.name as role
+       FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = $1`,
+      [userId]
+    );
+    if (userRes.rows.length === 0) return res.status(404).json({ message: "ไม่พบผู้ใช้" });
+    const user = userRes.rows[0];
+
+    // Likes/dislikes
+    const likesRes = await pool.query("SELECT COUNT(*) FROM user_ratings WHERE target_id = $1 AND rating = 'like'", [userId]);
+    const dislikesRes = await pool.query("SELECT COUNT(*) FROM user_ratings WHERE target_id = $1 AND rating = 'dislike'", [userId]);
+
+    const result = { ...user, likes: parseInt(likesRes.rows[0].count), dislikes: parseInt(dislikesRes.rows[0].count) };
+
+    if (user.role === 'seller') {
+      const auctionsRes = await pool.query("SELECT * FROM auctions WHERE seller_id = $1 ORDER BY created_at DESC", [userId]);
+      result.auctions = auctionsRes.rows;
+      result.auction_count = auctionsRes.rows.length;
+    } else {
+      const winsRes = await pool.query(
+        `SELECT DISTINCT ON (a.id) a.*, b.bid_amount as winning_bid
+         FROM auctions a JOIN bids b ON a.id = b.auction_id
+         WHERE a.end_time <= NOW() AND b.user_id = $1 AND b.bid_amount = a.current_bid
+         ORDER BY a.id, b.bid_time DESC`,
+        [userId]
+      );
+      result.won_auctions = winsRes.rows;
+      result.win_count = winsRes.rows.length;
+    }
+
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Rate a user
+app.post("/users/:userId/rate", authenticate, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { rating } = req.body;
+    if (!['like', 'dislike'].includes(rating)) return res.status(400).json({ message: "Invalid rating" });
+    if (String(req.userId) === String(userId)) return res.status(400).json({ message: "ไม่สามารถให้คะแนนตัวเองได้" });
+
+    await pool.query(
+      `INSERT INTO user_ratings (rater_id, target_id, rating) VALUES ($1, $2, $3)
+       ON CONFLICT (rater_id, target_id) DO UPDATE SET rating = $3`,
+      [req.userId, userId, rating]
+    );
+
+    const likesRes = await pool.query("SELECT COUNT(*) FROM user_ratings WHERE target_id = $1 AND rating = 'like'", [userId]);
+    const dislikesRes = await pool.query("SELECT COUNT(*) FROM user_ratings WHERE target_id = $1 AND rating = 'dislike'", [userId]);
+
+    res.json({ likes: parseInt(likesRes.rows[0].count), dislikes: parseInt(dislikesRes.rows[0].count) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get my rating for a user
+app.get("/users/:userId/my-rating", authenticate, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT rating FROM user_ratings WHERE rater_id = $1 AND target_id = $2",
+      [req.userId, req.params.userId]
+    );
+    res.json({ rating: result.rows.length > 0 ? result.rows[0].rating : null });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Submit a report
+app.post("/reports", authenticate, async (req, res) => {
+  try {
+    const { report_type, target_id, description } = req.body;
+    if (!report_type || !target_id || !description) {
+      return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบ" });
+    }
+    await pool.query(
+      "INSERT INTO reports (reporter_id, target_id, report_type, description) VALUES ($1, $2, $3, $4)",
+      [req.userId, target_id, report_type, description]
+    );
+    res.json({ message: "ส่งรายงานสำเร็จ" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 // ============ MESSAGING ============
 

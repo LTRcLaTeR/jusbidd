@@ -8,7 +8,7 @@
 /* ---- LEFT ---- */
 .landing-left {
   flex: 3;
-  background: #d3dfe9;
+  background: #c9d6e4;
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -21,7 +21,7 @@
   align-items: center;
   gap: 22px;
   padding: 14px 28px;
-  background: #c4d1de;
+  background: #b0c4d8;
 }
 .landing-nav-logo {
   height: 40px;
@@ -113,7 +113,7 @@
 /* ---- RIGHT ---- */
 .landing-right {
   flex: 2;
-  background: #c0ccda;
+  background: #1e3a5f;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -137,15 +137,15 @@
 }
 .landing-user-icon {
   font-size: 90px;
-  color: #2c3e6b;
+  color: #1e3a5f;
 }
 .landing-btn-primary {
   width: 280px;
   padding: 14px 0;
   border: none;
   border-radius: 10px;
-  background: #2c3e6b;
-  color: #fff;
+  background: #fff;
+  color: #1e3a5f;
   font-size: 1.08rem;
   font-weight: 600;
   cursor: pointer;
@@ -153,15 +153,15 @@
   font-family: inherit;
 }
 .landing-btn-primary:hover {
-  background: #1e2d50;
+  background: #e0e8f0;
 }
 .landing-btn-secondary {
   width: 280px;
   padding: 14px 0;
-  border: 2px solid #2c3e6b;
+  border: 2px solid #fff;
   border-radius: 10px;
-  background: #fff;
-  color: #2c3e6b;
+  background: transparent;
+  color: #fff;
   font-size: 1.08rem;
   font-weight: 600;
   cursor: pointer;
@@ -169,11 +169,11 @@
   font-family: inherit;
 }
 .landing-btn-secondary:hover {
-  background: #2c3e6b;
-  color: #fff;
+  background: #fff;
+  color: #1e3a5f;
 }
 .landing-guest-link {
-  color: #2c3e6b;
+  color: #d0dded;
   font-size: 0.95rem;
   text-decoration: underline;
   cursor: pointer;
@@ -181,5 +181,5 @@
   font-weight: 500;
 }
 .landing-guest-link:hover {
-  color: #1a2540;
+  color: #fff;
 }

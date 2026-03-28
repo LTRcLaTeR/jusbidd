@@ -21,6 +21,23 @@ async function initDatabase() {
   } catch (err) {
     console.error("Database initialization error:", err.message);
   }
+
+  // Run migrations for existing databases
+  try {
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_image TEXT`);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS user_ratings (
+        id SERIAL PRIMARY KEY,
+        rater_id INTEGER REFERENCES users(id),
+        target_id INTEGER REFERENCES users(id),
+        rating VARCHAR(10) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(rater_id, target_id)
+      )
+    `);
+  } catch (err) {
+    console.error("Migration error:", err.message);
+  }
 }
 
 module.exports = initDatabase;

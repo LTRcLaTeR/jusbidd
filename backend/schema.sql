@@ -12,6 +12,7 @@ CREATE TABLE users (
     username VARCHAR(100) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password TEXT NOT NULL,
+    profile_image TEXT,
     role_id INTEGER REFERENCES roles(id),
     status VARCHAR(20) DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -65,4 +66,13 @@ CREATE TABLE reports (
   description TEXT,
   status VARCHAR(20) DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_ratings (
+  id SERIAL PRIMARY KEY,
+  rater_id INTEGER REFERENCES users(id),
+  target_id INTEGER REFERENCES users(id),
+  rating VARCHAR(10) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(rater_id, target_id)
 );

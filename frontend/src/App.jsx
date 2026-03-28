@@ -9,6 +9,7 @@ import ProfileSeller from "./pages/ProfileSeller";
 import CreateAuction from "./pages/CreateAuction";
 import Chat from "./pages/Chat";
 import Landing from "./pages/Landing";
+import PublicProfile from "./pages/PublicProfile";
 
 function PrivateRoute({ children }) {
   const token = sessionStorage.getItem("token");
@@ -28,6 +29,7 @@ export default function App() {
       <Route path="/profile-seller" element={<ProfileSeller />} />
       <Route path="/create-auction" element={<PrivateRoute><CreateAuction /></PrivateRoute>} />
       <Route path="/chat/:auctionId/:otherUserId" element={<PrivateRoute><Chat /></PrivateRoute>} />
+      <Route path="/profile/:userId" element={<PublicProfile />} />
     </Routes>
   );
 }
