@@ -10,14 +10,13 @@ async function initDatabase() {
     );
 
     if (check.rows[0].exists) {
-      console.log("Database tables already exist, skipping migration.");
-      return;
+      console.log("Database tables already exist, skipping schema init.");
+    } else {
+      console.log("Initializing database tables...");
+      const schema = fs.readFileSync(path.join(__dirname, "schema.sql"), "utf-8");
+      await pool.query(schema);
+      console.log("Database initialized successfully.");
     }
-
-    console.log("Initializing database tables...");
-    const schema = fs.readFileSync(path.join(__dirname, "schema.sql"), "utf-8");
-    await pool.query(schema);
-    console.log("Database initialized successfully.");
   } catch (err) {
     console.error("Database initialization error:", err.message);
   }
@@ -33,6 +32,17 @@ async function initDatabase() {
         rating VARCHAR(10) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(rater_id, target_id)
+      )
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS reports (
+        id SERIAL PRIMARY KEY,
+        reporter_id INTEGER REFERENCES users(id),
+        target_id INTEGER REFERENCES users(id),
+        report_type VARCHAR(100) NOT NULL,
+        description TEXT,
+        status VARCHAR(20) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
   } catch (err) {
