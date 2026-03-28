@@ -54,7 +54,8 @@ CREATE TABLE messages (
   auction_id INTEGER REFERENCES auctions(id),
   sender_id INTEGER REFERENCES users(id),
   receiver_id INTEGER REFERENCES users(id),
-  content TEXT NOT NULL,
+  content TEXT,
+  image TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

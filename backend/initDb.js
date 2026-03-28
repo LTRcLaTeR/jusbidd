@@ -24,6 +24,8 @@ async function initDatabase() {
   // Run migrations for existing databases
   try {
     await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_image TEXT`);
+    await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS image TEXT`);
+    await pool.query(`ALTER TABLE messages ALTER COLUMN content DROP NOT NULL`);
     await pool.query(`
       CREATE TABLE IF NOT EXISTS user_ratings (
         id SERIAL PRIMARY KEY,

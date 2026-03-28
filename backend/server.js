@@ -362,13 +362,15 @@ app.post("/reports", authenticate, async (req, res) => {
 // Send a message
 app.post("/messages", authenticate, async (req, res) => {
   try {
-    const { auction_id, receiver_id, content } = req.body;
-    if (!auction_id || !receiver_id || !content || !content.trim()) {
+    const { auction_id, receiver_id, content, image } = req.body;
+    const hasContent = content && content.trim();
+    const hasImage = image && image.trim();
+    if (!auction_id || !receiver_id || (!hasContent && !hasImage)) {
       return res.status(400).json({ message: "ข้อมูลไม่ครบ" });
     }
     const result = await pool.query(
-      "INSERT INTO messages (auction_id, sender_id, receiver_id, content) VALUES ($1, $2, $3, $4) RETURNING *",
-      [auction_id, req.userId, receiver_id, content.trim()]
+      "INSERT INTO messages (auction_id, sender_id, receiver_id, content, image) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [auction_id, req.userId, receiver_id, hasContent ? content.trim() : null, hasImage ? image : null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -408,7 +410,7 @@ app.get("/conversations", authenticate, async (req, res) => {
         a.image as auction_image,
         CASE WHEN m.sender_id = $1 THEN m.receiver_id ELSE m.sender_id END as other_user,
         u.display_name as other_user_name,
-        m.content as last_message,
+        COALESCE(m.content, CASE WHEN m.image IS NOT NULL THEN '[รูปภาพ]' ELSE '' END) as last_message,
         m.created_at as last_message_time
        FROM messages m
        JOIN auctions a ON m.auction_id = a.id

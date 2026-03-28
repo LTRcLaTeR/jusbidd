@@ -58,7 +58,7 @@ export default function Navbar({ onSearch }) {
       </div>
 
       {/* HOME BUTTON */}
-      <button className="btn-home" onClick={handleHomeClick} style={{marginLeft: 16}}>
+      <button className="btn-home" onClick={handleHomeClick}>
         หน้าแรก
       </button>
 
