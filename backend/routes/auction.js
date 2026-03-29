@@ -243,8 +243,12 @@ router.post("/", authenticate, async (req, res) => {
     const startTimeValue = start_time && start_time.trim() !== '' ? start_time : null;
     const endTimeValue = end_time && end_time.trim() !== '' ? end_time : null;
 
-    const startingPrice = parseInt(starting_price, 10);
-    const bidIncrementValue = parseInt(bid_increment, 10) || 100;
+    const startingPrice = Math.round(Number(starting_price));
+    const bidIncrementValue = Math.round(Number(bid_increment)) || 100;
+
+    if (!Number.isFinite(startingPrice) || startingPrice <= 0) {
+      return res.status(400).json({ message: "ราคาเริ่มต้นไม่ถูกต้อง" });
+    }
 
     const result = await pool.query(
       "INSERT INTO auctions (title, description, image, starting_price, current_bid, category, seller_id, seller_username, bid_increment, start_time, end_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *",

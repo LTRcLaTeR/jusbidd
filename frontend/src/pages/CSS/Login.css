@@ -147,6 +147,16 @@ html, body {
   outline: none;
   border: 2px solid #d00000;
 }
+
+/* ซ่อนไอคอนเปิดดูรหัสผ่านของเบราว์เซอร์ */
+.input-group input::-ms-reveal,
+.input-group input::-ms-clear {
+  display: none;
+}
+.input-group input::-webkit-credentials-auto-fill-button,
+.input-group input::-webkit-clear-button {
+  display: none;
+}
 body {
   margin: 0;
   font-family: 'Kanit', sans-serif;

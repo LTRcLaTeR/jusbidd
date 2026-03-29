@@ -44,6 +44,12 @@ export default function HomeBidder() {
         <h1 className="home-title">Jus(tice) Bid</h1>
 
         <div className="category-section">
+          <button
+            className={`category${selectedCategory === "" ? " active" : ""}`}
+            onClick={() => setSelectedCategory("")}
+          >
+            ทั้งหมด
+          </button>
           {CATEGORIES.map(cat => (
             <button
               key={cat}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FaUser, FaThumbsUp, FaThumbsDown } from "react-icons/fa";
+import { FaUser, FaThumbsUp, FaThumbsDown, FaExclamationTriangle, FaCheck, FaTimes } from "react-icons/fa";
 import api from "../api";
 
 export default function AdminUsers() {
@@ -177,8 +177,8 @@ export default function AdminUsers() {
           <div className="admin-modal">
             <h3>
               {confirmAction.type === 'suspend'
-                ? '⚠️ ยืนยันการระงับบัญชี'
-                : '✅ ยืนยันการเปิดใช้งานบัญชี'}
+                ? <><FaExclamationTriangle /> ยืนยันการระงับบัญชี</>
+                : <><FaCheck /> ยืนยันการเปิดใช้งานบัญชี</>}
             </h3>
             <p>
               {confirmAction.type === 'suspend'
@@ -209,7 +209,7 @@ export default function AdminUsers() {
           <div className="admin-modal admin-modal-lg">
             <div className="admin-modal-header">
               <h3>โปรไฟล์ผู้ใช้</h3>
-              <span className="admin-modal-close" onClick={() => setViewUser(null)}>✕</span>
+              <span className="admin-modal-close" onClick={() => setViewUser(null)}><FaTimes /></span>
             </div>
 
             {viewLoading ? (
@@ -264,7 +264,7 @@ export default function AdminUsers() {
           <div className="admin-modal">
             <div className="admin-modal-header">
               <h3>ส่งข้อความถึง {showMessage.display_name}</h3>
-              <span className="admin-modal-close" onClick={() => { setShowMessage(null); setMessageText(""); setMessageError(""); setMessageSuccess(""); }}>✕</span>
+              <span className="admin-modal-close" onClick={() => { setShowMessage(null); setMessageText(""); setMessageError(""); setMessageSuccess(""); }}><FaTimes /></span>
             </div>
 
             {messageSuccess && <div className="admin-success-msg">{messageSuccess}</div>}

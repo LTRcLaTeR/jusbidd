@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { FaUser, FaThumbsUp, FaThumbsDown, FaExclamationTriangle } from "react-icons/fa";
+import { FaUser, FaThumbsUp, FaThumbsDown, FaExclamationTriangle, FaTimes } from "react-icons/fa";
 import api from "../api";
 import Navbar from "../components/Navbar";
 import AuctionCard from "../components/AuctionCard";
@@ -20,6 +20,7 @@ export default function PublicProfile() {
 
   const token = sessionStorage.getItem("token");
   const myId = sessionStorage.getItem("userId");
+  const myRole = sessionStorage.getItem("role");
 
   useEffect(() => {
     fetchProfile();
@@ -91,7 +92,30 @@ export default function PublicProfile() {
   if (!profile) return <><Navbar /><div className="public-profile-loading">ไม่พบผู้ใช้</div></>;
 
   const isSeller = profile.role === "seller";
+  const isBidderProfile = profile.role === "bidder";
   const isOwnProfile = String(myId) === String(userId);
+
+  // ประเภทการรายงานตาม role ของผู้รายงานและผู้ถูกรายงาน
+  const getReportTypes = () => {
+    if (myRole === "seller" && isBidderProfile) {
+      // Seller รายงาน Bidder
+      return [
+        "ผู้ประมูลไม่ชำระเงิน",
+        "ผู้ประมูลปั่นราคา",
+        "พฤติกรรมไม่เหมาะสม",
+        "ข้อมูลผู้ประมูลเป็นเท็จ",
+        "อื่นๆ",
+      ];
+    }
+    // Bidder รายงาน Seller (หรือกรณีอื่น)
+    return [
+      "ปัญหาการประมูล",
+      "ผู้ขายไม่ส่งสินค้า",
+      "สินค้าไม่ตรงปก",
+      "พฤติกรรมไม่เหมาะสม",
+      "อื่นๆ",
+    ];
+  };
 
   return (
     <>
@@ -180,7 +204,7 @@ export default function PublicProfile() {
           <div className="edit-modal">
             <div className="modal-header">
               <h3 style={{ margin: 0 }}>รายงานผู้ใช้</h3>
-              <span className="close-btn" onClick={() => setShowReport(false)}>✕</span>
+              <span className="close-btn" onClick={() => setShowReport(false)}><FaTimes /></span>
             </div>
 
             {reportError && <div className="error-message">{reportError}</div>}
@@ -193,11 +217,9 @@ export default function PublicProfile() {
               className="complaint-select"
             >
               <option value="">-- เลือกประเภท --</option>
-              <option value="ปัญหาการประมูล">ปัญหาการประมูล</option>
-              <option value="ผู้ขายไม่ส่งสินค้า">ผู้ขายไม่ส่งสินค้า</option>
-              <option value="สินค้าไม่ตรงปก">สินค้าไม่ตรงปก</option>
-              <option value="พฤติกรรมไม่เหมาะสม">พฤติกรรมไม่เหมาะสม</option>
-              <option value="อื่นๆ">อื่นๆ</option>
+              {getReportTypes().map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
             </select>
 
             <label>รายละเอียด:</label>

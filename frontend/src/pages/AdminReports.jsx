@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { FaCheck, FaTimes, FaSyncAlt } from "react-icons/fa";
 import api from "../api";
 
 export default function AdminReports() {
@@ -97,9 +98,9 @@ export default function AdminReports() {
               <thead>
                 <tr>
                   <th>Report ID</th>
-                  <th>ประเภท</th>
-                  <th>คำร้องจาก</th>
-                  <th>เป้าหมาย</th>
+                  <th>ประเภทคำร้อง</th>
+                  <th>ผู้รายงาน</th>
+                  <th>ผู้ถูกรายงาน</th>
                   <th>สถานะ</th>
                   <th>เวลา</th>
                   <th>Actions</th>
@@ -134,34 +135,34 @@ export default function AdminReports() {
           <h3>รายละเอียดคำร้องเรียน</h3>
           {selectedReport ? (
             <>
-              <div className="report-detail-type">ประเภท: {selectedReport.report_type}</div>
+              <div className="report-detail-type"><strong>ประเภทคำร้อง:</strong> {selectedReport.report_type}</div>
               <div className="report-detail-from">
-                จาก: {selectedReport.reporter_name} (U{selectedReport.reporter_id})
+                <strong>ผู้รายงาน:</strong> {selectedReport.reporter_name} (U{selectedReport.reporter_id})
               </div>
               {selectedReport.reporter_email && (
-                <div className="report-detail-from">อีเมล: {selectedReport.reporter_email}</div>
+                <div className="report-detail-from"><strong>อีเมลผู้รายงาน:</strong> {selectedReport.reporter_email}</div>
               )}
-              <div className="report-detail-target">เป้าหมาย: {selectedReport.target_name ? `${selectedReport.target_name} (@${selectedReport.target_username})` : selectedReport.target_id}</div>
-              <div className="report-detail-date">วันที่: {formatDate(selectedReport.created_at)}</div>
-              <div style={{ marginBottom: 8 }}>สถานะ: {getStatusBadge(selectedReport.status)}</div>
+              <div className="report-detail-target"><strong>ผู้ถูกรายงาน:</strong> {selectedReport.target_name ? `${selectedReport.target_name} (@${selectedReport.target_username})` : selectedReport.target_id}</div>
+              <div className="report-detail-date"><strong>เวลาที่รายงาน:</strong> {formatDate(selectedReport.created_at)}</div>
+              <div style={{ marginBottom: 8 }}><strong>สถานะ:</strong> {getStatusBadge(selectedReport.status)}</div>
               <div className="report-detail-content">
-                <strong>รายละเอียด:</strong><br />
+                <strong>เหตุผล / รายละเอียด:</strong><br />
                 {selectedReport.description || "ไม่มีรายละเอียด"}
               </div>
               <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {selectedReport.status === "pending" && (
                   <>
                     <button className="admin-btn-primary" onClick={() => handleUpdateStatus(selectedReport.id, "resolved")}>
-                      ✅ แก้ไขแล้ว
+                      <FaCheck /> แก้ไขแล้ว
                     </button>
                     <button className="admin-btn-secondary" onClick={() => handleUpdateStatus(selectedReport.id, "rejected")} style={{ background: "#e57373", color: "#fff" }}>
-                      ❌ ปฏิเสธ
+                      <FaTimes /> ปฏิเสธ
                     </button>
                   </>
                 )}
                 {selectedReport.status !== "pending" && (
                   <button className="admin-btn-secondary" onClick={() => handleUpdateStatus(selectedReport.id, "pending")}>
-                    🔄 กลับไปรอดำเนินการ
+                    <FaSyncAlt /> กลับไปรอดำเนินการ
                   </button>
                 )}
               </div>

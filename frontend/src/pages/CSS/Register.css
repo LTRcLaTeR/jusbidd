@@ -140,3 +140,38 @@ select {
   border-radius:5px;
   cursor:pointer;
 }
+
+/* Password eye toggle wrapper */
+.register-password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.register-password-wrapper input {
+  width: 100%;
+  padding-right: 40px;
+  box-sizing: border-box;
+}
+
+.register-toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  color: #1f3f6e;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+/* ซ่อนไอคอนเปิดดูรหัสผ่านของเบราว์เซอร์ */
+.register-password-wrapper input::-ms-reveal,
+.register-password-wrapper input::-ms-clear {
+  display: none;
+}
+.register-password-wrapper input::-webkit-credentials-auto-fill-button,
+.register-password-wrapper input::-webkit-clear-button {
+  display: none;
+}

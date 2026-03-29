@@ -16,8 +16,8 @@
 
 .card-content {
   display: flex;
-  padding: 15px;
-  gap: 15px;
+  padding: 12px;
+  gap: 10px;
   flex: 1;
   background: rgba(15, 45, 80, 0.95);
   color: white;
@@ -27,25 +27,26 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 2px;
 }
 
 .card-left h3 {
-  margin: 0 0 10px 0;
+  margin: 0 0 4px 0;
   font-size: 16px;
   color: white;
 }
 
 .card-left .price {
-  margin: 0 0 10px 0;
-  font-size: 14px;
+  margin: 0 0 2px 0;
+  font-size: 13px;
   color: #e0e0e0;
 }
 
 .card-left .current-price,
 .card-left .minimum-bid {
-  margin: 0 0 8px 0;
-  font-size: 14px;
+  margin: 0 0 2px 0;
+  font-size: 13px;
   color: #ffffff;
 }
 
@@ -102,10 +103,33 @@
 
 /* Winner text */
 .winner-text {
-  margin: 8px 0 0 0;
-  font-size: 14px;
+  margin: 4px 0 0 0;
+  font-size: 13px;
   color: #ffe082;
   font-weight: 700;
+}
+
+.winner-price-text {
+  margin: 2px 0 0 0;
+  font-size: 13px;
+  color: #ffffff;
+}
+
+.post-auction-info {
+  margin-top: 4px;
+}
+
+.post-auction-title {
+  margin: 0 0 2px 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.post-auction-steps {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 /* Bid Popup - OLD (kept for compat) */

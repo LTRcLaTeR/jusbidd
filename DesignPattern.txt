@@ -1,0 +1,101 @@
+====================================================================
+Design Patterns ที่ใช้ในเว็บไซต์ Jus(tice) Bid
+====================================================================
+
+1. Singleton Pattern
+--------------------------------------------------------------------
+ไฟล์: frontend/src/api.js
+
+อธิบาย:
+  Singleton Pattern คือรูปแบบที่กำหนดให้มี instance ของ object เพียงตัวเดียว
+  ที่ถูกแชร์ใช้งานร่วมกันทั้งระบบ
+
+  ในไฟล์ api.js มีการสร้าง axios instance เพียงตัวเดียว:
+
+    const api = axios.create({
+      baseURL: import.meta.env.VITE_API_URL || "http://localhost:5002"
+    });
+
+  instance นี้ถูก export ออกไปใช้งานในทุก component ทั่วทั้งแอป
+  (HomeBidder, HomeSeller, AuctionCard, ProfileBidder, AdminReports, ...)
+  โดยทุกครั้งที่ import api จะได้ object ตัวเดียวกันเสมอ
+
+  ข้อดี:
+  - การตั้งค่า baseURL, interceptors (เช่น การแนบ token, การจัดการ
+    response error สำหรับ suspend) ทำเพียงครั้งเดียวแล้วมีผลทั้งระบบ
+  - ไม่ต้องสร้าง axios instance ใหม่ทุกครั้งที่เรียก API
+  - เปลี่ยนแปลง config ที่จุดเดียวมีผลกับทุก request
+
+
+2. Observer Pattern
+--------------------------------------------------------------------
+ไฟล์: frontend/src/components/AuctionCard.jsx
+      frontend/src/App.jsx (SuspendChecker)
+
+อธิบาย:
+  Observer Pattern คือรูปแบบที่ object หนึ่ง (Subject) แจ้งเตือน
+  object อื่น (Observers) เมื่อมีการเปลี่ยนแปลงสถานะ
+
+  ในเว็บไซต์นี้มีการใช้ Observer Pattern ใน 2 ลักษณะ:
+
+  a) React State + useEffect (Built-in Observer):
+     เมื่อ state เปลี่ยน (เช่น setCurrentBid, setAuctions, setStatus)
+     React จะ re-render component ที่ subscribe อยู่โดยอัตโนมัติ
+
+     ตัวอย่างใน AuctionCard.jsx:
+       const [currentBid, setCurrentBid] = useState(...);
+       useEffect(() => { /* poll ราคาใหม่ทุก 2 วินาที */ }, [status]);
+
+     เมื่อ currentBid เปลี่ยน ส่วนแสดงราคาจะ re-render ทันที
+
+  b) Polling-based Observer:
+     AuctionCard ใช้ setInterval ดึงข้อมูลราคาประมูลทุก 2 วินาที
+     และ SuspendChecker ใช้ setInterval ตรวจสอบสถานะ suspend ทุก 10 วินาที
+     เมื่อตรวจพบการเปลี่ยนแปลง จะอัปเดต state → trigger re-render
+
+  ข้อดี:
+  - UI อัปเดตแบบ real-time ตามข้อมูลจริงจาก server
+  - Component แยกส่วนกัน แต่สามารถตอบสนองต่อการเปลี่ยนแปลงได้
+
+
+3. Middleware Pattern (Chain of Responsibility)
+--------------------------------------------------------------------
+ไฟล์: backend/auth.js
+      backend/routes/admin.js
+      frontend/src/api.js (interceptors)
+
+อธิบาย:
+  Middleware Pattern / Chain of Responsibility คือรูปแบบที่ request
+  ถูกส่งผ่านลำดับของ handler (middleware) แต่ละตัวมีหน้าที่เฉพาะ
+  สามารถประมวลผล, แก้ไข, หรือหยุด request ได้
+
+  ในฝั่ง Backend (Express.js):
+
+    1) authenticate middleware (auth.js):
+       - ตรวจสอบ JWT token
+       - ตรวจสอบว่าผู้ใช้ถูก suspend หรือไม่
+       - ถ้าไม่ผ่าน → ส่ง 401/403 กลับทันที (หยุด chain)
+
+    2) requireAdmin middleware (routes/admin.js):
+       - ตรวจสอบว่า user มี role เป็น admin หรือไม่
+       - ถ้าไม่ใช่ admin → ส่ง 403 กลับ
+
+    เมื่อ admin route ถูกเรียก chain ทำงานดังนี้:
+      Request → authenticate → requireAdmin → route handler → Response
+
+  ในฝั่ง Frontend (Axios Interceptors):
+
+    1) Request Interceptor:
+       - แนบ Authorization header (Bearer token) ให้ทุก request
+
+    2) Response Interceptor:
+       - ตรวจจับ 403 (suspend) → แจ้งเตือน + logout + redirect
+
+    chain: Request → [แนบ token] → Server → Response → [ตรวจ suspend]
+
+  ข้อดี:
+  - แยก concerns ออกเป็น middleware แต่ละตัวชัดเจน
+  - เพิ่ม/ลด middleware ได้ง่ายโดยไม่กระทบ logic อื่น
+  - ลดการเขียนโค้ดซ้ำ (เช่น ไม่ต้องเช็ค token ในทุก route)
+
+====================================================================

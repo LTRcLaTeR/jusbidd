@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { FaUser, FaCamera } from "react-icons/fa";
+import { FaUser, FaCamera, FaTimes } from "react-icons/fa";
 import api from "../api";
 import Navbar from "../components/Navbar";
 import AuctionCard from "../components/AuctionCard";
@@ -160,7 +160,7 @@ export default function Profile() {
                 className="close-btn"
                 onClick={() => setShowEdit(false)}
               >
-                ✕
+                <FaTimes />
               </span>
             </div>
 

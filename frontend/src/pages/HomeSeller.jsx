@@ -80,6 +80,12 @@ export default function HomeSeller() {
         </div>
 
         <div className="category-section">
+          <button
+            className={`category${selectedCategory === "" ? " active" : ""}`}
+            onClick={() => setSelectedCategory("")}
+          >
+            ทั้งหมด
+          </button>
           {CATEGORIES.map(cat => (
             <button
               key={cat}

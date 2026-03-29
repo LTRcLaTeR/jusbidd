@@ -1,6 +1,7 @@
 import { useState } from "react";
 import api from "../api";
 import { useNavigate, Link } from "react-router-dom";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import "./CSS/Register.css";
 import logo from "../assets/logo.png";
 
@@ -17,6 +18,8 @@ export default function Register() {
 
   const [errors, setErrors] = useState({});
   const [popup, setPopup] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const validate = () => {
@@ -128,12 +131,20 @@ export default function Register() {
         {errors.username && <p className="error">* {errors.username}</p>}
 
         <label>รหัสผ่าน:</label>
-        <input
-          type="password"
-          placeholder="รหัสผ่านของคุณ"
-          value={form.password}
-          onChange={e => setForm({ ...form, password: e.target.value })}
-        />
+        <div className="register-password-wrapper">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="รหัสผ่านของคุณ"
+            value={form.password}
+            onChange={e => setForm({ ...form, password: e.target.value })}
+          />
+          <span
+            className="register-toggle-password"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
+          </span>
+        </div>
         {errors.password && <p className="error">* {errors.password}</p>}
 
         <div className="password-hint">
@@ -146,12 +157,20 @@ export default function Register() {
         </div>
 
         <label>ยืนยันรหัสผ่าน:</label>
-        <input
-          type="password"
-          placeholder="ยืนยันรหัสผ่านของคุณ"
-          value={form.confirm_password}
-          onChange={e => setForm({ ...form, confirm_password: e.target.value })}
-        />
+        <div className="register-password-wrapper">
+          <input
+            type={showConfirmPassword ? "text" : "password"}
+            placeholder="ยืนยันรหัสผ่านของคุณ"
+            value={form.confirm_password}
+            onChange={e => setForm({ ...form, confirm_password: e.target.value })}
+          />
+          <span
+            className="register-toggle-password"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          >
+            {showConfirmPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
+          </span>
+        </div>
         {errors.confirm_password && <p className="error">* {errors.confirm_password}</p>}
 
         <label>บทบาท:</label>

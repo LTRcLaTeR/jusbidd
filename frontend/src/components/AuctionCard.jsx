@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaComments, FaUser, FaPen, FaCheck, FaTimes, FaSyncAlt } from "react-icons/fa";
 import api from "../api";
 import "../pages/CSS/AuctionCard.css";
 
@@ -201,21 +202,21 @@ export default function AuctionCard({ item }) {
           )}
           {/* Bidder winner: chat with seller */}
           {status === "after" && isBidder && isWinner && (
-            <button className="chat-btn-card" onClick={handleChatSeller}>💬 แชทกับผู้ขาย</button>
+            <button className="chat-btn-card" onClick={handleChatSeller}><FaComments /> แชทกับผู้ขาย</button>
           )}
           {/* View seller profile */}
           {item.seller_id && (
             <button className="seller-profile-btn" onClick={handleViewSellerProfile}>
-              👤 ดูโปรไฟล์ผู้ขาย
+              <FaUser /> ดูโปรไฟล์ผู้ขาย
             </button>
           )}
           {/* Seller: chat with winner */}
           {status === "after" && isSeller && winnerId && (
-            <button className="chat-btn-card" onClick={handleChatWinner}>💬 แชทกับผู้ชนะ</button>
+            <button className="chat-btn-card" onClick={handleChatWinner}><FaComments /> แชทกับผู้ชนะ</button>
           )}
           {/* Seller: edit before auction starts */}
           {status === "before" && isSeller && (
-            <button className="edit-auction-btn" onClick={() => setShowEditPopup(true)}>✏️ แก้ไขรายการ</button>
+            <button className="edit-auction-btn" onClick={() => setShowEditPopup(true)}><FaPen /> แก้ไขรายการ</button>
           )}
         </div>
         <div className="card-right">
@@ -255,7 +256,7 @@ export default function AuctionCard({ item }) {
               <div className="bid-popup-left">
                 <img src={item.image} alt={item.title} className="bid-popup-img-new" />
                 <div className="bid-popup-seller-row" onClick={handleViewSellerProfile} style={{ cursor: "pointer" }}>
-                  <span>ผู้ขาย: {item.seller_username || "-"} 👤</span>
+                  <span>ผู้ขาย: {item.seller_username || "-"} <FaUser /></span>
                 </div>
               </div>
 
@@ -295,7 +296,7 @@ export default function AuctionCard({ item }) {
             {/* Bottom: chat button */}
             <div className="bid-popup-bottom">
               <button className="bid-popup-chat-btn" onClick={handleChatSeller}>
-                แชทสอบถาม 💬
+                แชทสอบถาม <FaComments />
               </button>
             </div>
 

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { FaUser, FaThumbsUp, FaThumbsDown, FaCamera } from "react-icons/fa";
+import { FaUser, FaThumbsUp, FaThumbsDown, FaCamera, FaTimes } from "react-icons/fa";
 import Navbar from "../components/Navbar";
 import AuctionCard from "../components/AuctionCard";
 import FloatingChat from "../components/FloatingChat";
@@ -138,7 +138,7 @@ const ProfileSeller = () => {
           <div className="edit-modal">
             <div className="modal-header">
               <button className="save-btn" onClick={updateProfile}>แก้ไข</button>
-              <span className="close-btn" onClick={() => setShowEdit(false)}>✕</span>
+              <span className="close-btn" onClick={() => setShowEdit(false)}><FaTimes /></span>
             </div>
 
             {error && <div className="error-message">{error}</div>}

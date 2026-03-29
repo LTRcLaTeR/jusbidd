@@ -157,6 +157,14 @@ app.post("/login", async (req, res) => {
 
     const user = result.rows[0];
 
+    // Block suspended users from logging in
+    if (user.status === 'suspended') {
+      return res.status(403).json({
+        success: false,
+        message: "บัญชีของคุณถูกระงับ กรุณาติดต่อผู้ดูแลระบบ"
+      });
+    }
+
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
@@ -196,7 +204,7 @@ app.post("/login", async (req, res) => {
 app.get("/me", authenticate, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT u.id, u.display_name, u.username, u.email, u.profile_image, u.created_at, u.role_id, r.name as role FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = $1",
+      "SELECT u.id, u.display_name, u.username, u.email, u.profile_image, u.created_at, u.role_id, u.status, r.name as role FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = $1",
       [req.userId]
     );
     if (result.rows.length === 0) {

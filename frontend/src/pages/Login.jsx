@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FaUser, FaLock } from "react-icons/fa";
+import { FaUser, FaLock, FaArrowRight } from "react-icons/fa";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import "./CSS/Login.css";
 import logo from "../assets/logo.png";
@@ -126,7 +126,7 @@ export default function Login() {
           </button>
 
           <div className="register-text">
-            หากยังไม่มีบัญชี ➜{" "}
+            หากยังไม่มีบัญชี <FaArrowRight />{" "}
             <Link to="/register">สมัครสมาชิกที่นี่</Link>
           </div>
 

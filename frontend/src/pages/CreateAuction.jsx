@@ -44,8 +44,8 @@ export default function CreateAuction(){
     let newErrors = {};
 
     if (!form.title.trim()) newErrors.title = "กรุณากรอกชื่อสินค้า";
-    if (!form.starting_price || parseFloat(form.starting_price) <= 0)
-      newErrors.starting_price = "กรุณากรอกราคาเริ่มต้นที่มากกว่า 0";
+    if (!form.starting_price || !Number.isInteger(Number(form.starting_price)) || Number(form.starting_price) <= 0)
+      newErrors.starting_price = "กรุณากรอกราคาเริ่มต้นเป็นจำนวนเต็มที่มากกว่า 0";
     if (!form.bid_increment || !Number.isInteger(Number(form.bid_increment)) || Number(form.bid_increment) <= 0)
       newErrors.bid_increment = "กรุณากรอกราคาขั้นต่ำต่อครั้งเป็นจำนวนเต็มที่มากกว่า 0";
     if (!form.description.trim()) newErrors.description = "กรุณากรอกรายละเอียด";
@@ -225,6 +225,8 @@ export default function CreateAuction(){
               <input
                 name="starting_price"
                 type="number"
+                min="1"
+                step="1"
                 value={form.starting_price}
                 onChange={handleChange}
               />

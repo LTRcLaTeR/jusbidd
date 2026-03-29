@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import HomeBidder from "./pages/HomeBidder";
@@ -10,15 +11,46 @@ import CreateAuction from "./pages/CreateAuction";
 import Chat from "./pages/Chat";
 import Landing from "./pages/Landing";
 import PublicProfile from "./pages/PublicProfile";
+import api from "./api";
 
 function PrivateRoute({ children }) {
   const token = sessionStorage.getItem("token");
   return token ? children : <Navigate to="/" replace />;
 }
 
+function SuspendChecker() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    if (!token) return;
+
+    const checkSuspend = async () => {
+      try {
+        const res = await api.get("/me");
+        if (res.data.status === "suspended") {
+          alert("บัญชีของคุณถูกระงับ กรุณาติดต่อผู้ดูแลระบบ");
+          sessionStorage.removeItem("token");
+          sessionStorage.removeItem("userId");
+          sessionStorage.removeItem("role");
+          navigate("/login");
+        }
+      } catch {}
+    };
+
+    checkSuspend();
+    const interval = setInterval(checkSuspend, 10000);
+    return () => clearInterval(interval);
+  }, [navigate]);
+
+  return null;
+}
+
 export default function App() {
   return (
-    <Routes>
+    <>
+      <SuspendChecker />
+      <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -31,5 +63,6 @@ export default function App() {
       <Route path="/chat/:auctionId/:otherUserId" element={<PrivateRoute><Chat /></PrivateRoute>} />
       <Route path="/profile/:userId" element={<PublicProfile />} />
     </Routes>
+    </>
   );
 }
