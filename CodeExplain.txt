@@ -1,0 +1,593 @@
+================================================================================
+                    เอกสารคู่มือระบบ JusBid - อธิบาย Code
+                    (Code Explanation Document)
+================================================================================
+
+สารบัญ (Table of Contents)
+────────────────────────────────────────
+1.  ภาพรวมระบบ (System Overview)
+2.  โครงสร้างโปรเจกต์ (Project Structure)
+3.  ฐานข้อมูล (Database Schema)
+4.  ระบบ Authentication & Authorization
+5.  Backend API Endpoints
+6.  ระบบประมูล (Auction System)
+7.  ระบบแชท (Messaging System)
+8.  ระบบแอดมิน (Admin System)
+9.  ระบบโปรไฟล์และให้คะแนน (Profile & Rating)
+10. ระบบรายงาน (Report System)
+11. Frontend Routing & Components
+12. การ Deploy ด้วย Docker
+────────────────────────────────────────
+
+
+================================================================================
+1. ภาพรวมระบบ (System Overview)
+================================================================================
+
+JusBid เป็นแพลตฟอร์มประมูลสินค้าออนไลน์ รองรับ 3 บทบาท:
+  - Bidder (ผู้ประมูล): เข้าร่วมประมูลสินค้า, แชทกับผู้ขาย
+  - Seller (ผู้ขาย): สร้างรายการประมูล, ดูผลประมูล, แชทกับผู้ชนะ
+  - Admin (ผู้ดูแลระบบ): จัดการผู้ใช้, ดูรายงาน, ส่งข้อความ
+
+Tech Stack:
+  - Frontend : React 18 + Vite + React Router v6 + Axios
+  - Backend  : Express.js (Node 18)
+  - Database : PostgreSQL 15
+  - Auth     : JWT (JSON Web Token) + bcrypt
+  - Deploy   : Docker Compose (3 containers)
+
+การสื่อสาร:
+  Frontend (port 5175) → Axios HTTP → Backend API (port 5002) → PostgreSQL (port 5434)
+
+
+================================================================================
+2. โครงสร้างโปรเจกต์ (Project Structure)
+================================================================================
+
+jusbid/
+├── docker-compose.yml          # จัดการ container ทั้งหมด
+├── backend/
+│   ├── server.js               # Express server หลัก (auth, profile, messaging)
+│   ├── db.js                   # เชื่อมต่อ PostgreSQL (Pool)
+│   ├── auth.js                 # JWT middleware ตรวจสอบ token
+│   ├── initDb.js               # สร้างตาราง + migration อัตโนมัติ
+│   ├── schema.sql              # SQL สร้างตารางทั้งหมด
+│   ├── emailUtils.js           # ส่งอีเมลยืนยัน (nodemailer)
+│   ├── routes/
+│   │   ├── auction.js          # CRUD ประมูล + วางบิด
+│   │   └── admin.js            # API สำหรับแอดมิน
+│   ├── dockerfile              # Docker image backend
+│   └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx             # Routes ทั้งหมด + ตรวจสอบ suspend
+│   │   ├── api.js              # Axios instance + interceptors
+│   │   ├── main.jsx            # Entry point (BrowserRouter)
+│   │   ├── components/
+│   │   │   ├── AuctionCard.jsx # การ์ดแสดงสินค้า + popup บิด
+│   │   │   ├── FloatingChat.jsx# แชทลอยมุมขวาล่าง
+│   │   │   └── Navbar.jsx      # แถบนำทางด้านบน
+│   │   └── pages/
+│   │       ├── Landing.jsx     # หน้าแรก (ก่อน login)
+│   │       ├── Login.jsx       # เข้าสู่ระบบ
+│   │       ├── Register.jsx    # สมัครสมาชิก
+│   │       ├── HomeBidder.jsx  # หน้าหลัก bidder
+│   │       ├── HomeSeller.jsx  # หน้าหลัก seller
+│   │       ├── CreateAuction.jsx # สร้างรายการประมูล
+│   │       ├── ProfileBidder.jsx # โปรไฟล์ bidder
+│   │       ├── ProfileSeller.jsx # โปรไฟล์ seller
+│   │       ├── PublicProfile.jsx # โปรไฟล์สาธารณะ + รายงาน
+│   │       ├── Chat.jsx        # หน้าแชทเต็มจอ
+│   │       ├── Admin.jsx       # Layout แอดมิน (sidebar + tabs)
+│   │       ├── AdminHome.jsx   # Dashboard สถิติ
+│   │       ├── AdminUsers.jsx  # จัดการผู้ใช้
+│   │       ├── AdminReports.jsx# จัดการคำร้องเรียน
+│   │       └── AdminAuctionLogs.jsx # บันทึกการประมูล
+│   ├── dockerfile              # Multi-stage build (Vite → nginx)
+│   ├── nginx.conf              # SPA fallback config
+│   └── package.json
+
+
+================================================================================
+3. ฐานข้อมูล (Database Schema)
+================================================================================
+
+ตารางทั้งหมด 7 ตาราง (ไฟล์ schema.sql):
+
+┌─────────────────────────────────────────────────────────────┐
+│ roles                                                       │
+│  id SERIAL PK, name VARCHAR(20) UNIQUE                      │
+│  ข้อมูลเริ่มต้น: 1=bidder, 2=seller, 3=admin               │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ users                                                       │
+│  id SERIAL PK                                               │
+│  display_name, username (UNIQUE), email (UNIQUE)            │
+│  password (TEXT - bcrypt hash)                               │
+│  profile_image (TEXT - base64 encoded)                       │
+│  role_id → FK roles(id)                                     │
+│  status VARCHAR(20) DEFAULT 'active'  ← 'active'|'suspended'│
+│  created_at TIMESTAMP                                       │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ auctions                                                    │
+│  id SERIAL PK                                               │
+│  title, description, image (TEXT base64)                     │
+│  starting_price INTEGER, current_bid INTEGER DEFAULT 0       │
+│  category VARCHAR(100)                                       │
+│  status VARCHAR(50) DEFAULT 'active'                         │
+│  seller_id → FK users(id), seller_username                   │
+│  bid_increment INTEGER DEFAULT 100                           │
+│  start_time, end_time TIMESTAMP                              │
+│  created_at TIMESTAMP                                       │
+│                                                             │
+│  ** current_bid เริ่มต้นเป็น 0 เมื่อสร้างใหม่               │
+│     ระบบจะตรวจสอบจำนวนบิดจริงจากตาราง bids                   │
+│     เพื่อคำนวณราคาขั้นต่ำ                                   │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ bids                                                        │
+│  id SERIAL PK                                               │
+│  user_id → FK users(id)                                     │
+│  auction_id → FK auctions(id)                               │
+│  bid_amount INTEGER                                         │
+│  bid_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP               │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ messages                                                    │
+│  id SERIAL PK                                               │
+│  auction_id → FK auctions(id)  ← อาจเป็น NULL (ข้อความแอดมิน)│
+│  sender_id, receiver_id → FK users(id)                      │
+│  content TEXT (nullable), image TEXT (base64)                │
+│  created_at TIMESTAMP                                       │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ reports                                                     │
+│  id SERIAL PK                                               │
+│  reporter_id, target_id → FK users(id)                      │
+│  report_type VARCHAR(100), description TEXT                  │
+│  status 'pending'|'resolved'|'rejected'                     │
+│  created_at TIMESTAMP                                       │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ user_ratings                                                │
+│  id SERIAL PK                                               │
+│  rater_id, target_id → FK users(id)                         │
+│  rating VARCHAR(10) ← 'like' | 'dislike'                    │
+│  UNIQUE(rater_id, target_id)  ← 1 คนให้ได้ 1 คะแนน/คน      │
+└─────────────────────────────────────────────────────────────┘
+
+Demo accounts (password ทุกตัว = "Password1"):
+  - bidderdemo / bidder@example.com  (role: bidder)
+  - sellerdemo / seller@example.com  (role: seller)
+  - admindemo  / admin@example.com   (role: admin)
+
+
+================================================================================
+4. ระบบ Authentication & Authorization
+================================================================================
+
+ไฟล์หลัก: backend/auth.js, frontend/src/api.js
+
+── 4.1 Backend: JWT Middleware (auth.js) ──
+
+  const SECRET = "jusbidsecret";
+
+  authenticate = async (req, res, next) => {
+    1. ดึง token จาก header: Authorization: Bearer <token>
+    2. jwt.verify(token, SECRET) → ได้ decoded { id, role }
+    3. req.userId = decoded.id
+    4. ตรวจสอบ status ผู้ใช้ → ถ้า 'suspended' ส่ง 403
+    5. next() ถ้าผ่านทั้งหมด
+  }
+
+  ใช้กับ route ที่ต้อง login เช่น:
+    - POST /auctions/:id/bid
+    - GET /me
+    - POST /messages
+    - ทุก route ใน /admin/*
+
+── 4.2 Frontend: Axios Interceptors (api.js) ──
+
+  Request Interceptor:
+    - แนบ token จาก sessionStorage ทุกครั้ง
+    - config.headers.Authorization = `Bearer ${token}`
+
+  Response Interceptor:
+    - จับ error 403 ที่มีคำว่า "ระงับ"
+    - ลบ session → redirect ไป /login
+    - alert แจ้งเตือนว่าบัญชีถูกระงับ
+
+── 4.3 Login Flow ──
+
+  1. POST /login { username, password }
+  2. Backend: bcrypt.compare(password, user.password)
+  3. ถ้าผ่าน → jwt.sign({ id, role }, SECRET, { expiresIn: "1h" })
+  4. ส่งกลับ { token, role, id }
+  5. Frontend: เก็บใน sessionStorage → navigate ตาม role
+       - bidder → /home-bidder
+       - seller → /home-seller
+       - admin  → /admin
+
+── 4.4 Register Flow ──
+
+  1. Frontend validate:
+     - ทุกช่องต้องกรอก, email format, password ≥ 8 ตัว
+     - ต้องมี a-z, A-Z, 0-9 อย่างน้อยอย่างละ 1 ตัว
+  2. POST /register { display_name, username, email, password, confirm_password, role }
+  3. Backend validate ซ้ำ + เช็ค username/email ซ้ำ
+  4. bcrypt.hash(password, 10) → INSERT INTO users
+  5. สำเร็จ → navigate ไป /login
+
+── 4.5 SuspendChecker (App.jsx) ──
+
+  - ทุก 10 วินาที เรียก GET /me
+  - ถ้า status === "suspended" → ลบ session + alert + redirect
+
+
+================================================================================
+5. Backend API Endpoints
+================================================================================
+
+── 5.1 Auth & User (server.js) ──
+
+  POST /register         สมัครสมาชิก
+  POST /login            เข้าสู่ระบบ → ได้ JWT token
+  GET  /me               ดึงข้อมูลผู้ใช้ปัจจุบัน (ต้อง auth)
+  PUT  /update-profile   แก้ไข display_name, email, password, profile_image
+  GET  /users/:id        ดึงข้อมูลผู้ใช้ตาม ID (public)
+
+── 5.2 Auction (routes/auction.js) ──
+
+  GET    /auctions                  รายการประมูลทั้งหมด (?search, ?category)
+  GET    /auctions/:id              รายละเอียดประมูล + has_bids + ผู้ชนะ
+  POST   /auctions                  สร้างรายการประมูลใหม่ (ต้อง auth)
+  POST   /auctions/:id/bid          วางบิด (ต้อง auth)
+  PUT    /auctions/:id              แก้ไข title/description (ก่อนเปิดประมูล)
+  GET    /auctions/my-bids          รายการที่เคยบิด (ต้อง auth)
+  GET    /auctions/my-wins          รายการที่ชนะ (ต้อง auth)
+  GET    /auctions/my-listings      รายการที่สร้าง (seller, ต้อง auth)
+
+── 5.3 Messaging (server.js) ──
+
+  POST /messages                           ส่งข้อความ (text/image)
+  GET  /messages/:auctionId/:otherUserId   ดึงข้อความสนทนา
+  GET  /conversations                      รายการสนทนาทั้งหมด
+
+── 5.4 Profile & Rating (server.js) ──
+
+  GET  /users/:userId/public-profile   โปรไฟล์สาธารณะ + auctions/wins
+  POST /users/:userId/rate             ให้คะแนน like/dislike
+  GET  /users/:userId/my-rating        ดูว่าเราให้คะแนนอะไรไป
+
+── 5.5 Report (server.js) ──
+
+  POST /reports                  ส่งรายงานผู้ใช้
+
+── 5.6 Admin (routes/admin.js | ทุก route ต้อง auth + requireAdmin) ──
+
+  GET  /admin/stats              สถิติรวม (users, auctions, reports)
+  GET  /admin/auctions           รายการประมูลทั้งหมด
+  GET  /admin/users              ค้นหาผู้ใช้ (?search)
+  GET  /admin/users/:id          ดูรายละเอียดผู้ใช้ + likes/dislikes/stats
+  PUT  /admin/users/:id/suspend  ระงับบัญชี
+  PUT  /admin/users/:id/activate เปิดใช้งานบัญชี
+  POST /admin/users/:id/message  ส่งข้อความถึงผู้ใช้
+  GET  /admin/reports            ดูรายงาน (?search by id/reporter/target)
+  PUT  /admin/reports/:id        อัปเดตสถานะรายงาน
+  GET  /admin/auction-logs       บันทึกการบิด (?search by user_id/auction_id)
+
+
+================================================================================
+6. ระบบประมูล (Auction System)
+================================================================================
+
+── 6.1 สร้างรายการประมูล (CreateAuction.jsx → POST /auctions) ──
+
+  ข้อมูลที่ต้องกรอก:
+    - ชื่อสินค้า, รายละเอียด, รูปภาพ
+    - ราคาเริ่มต้น, เพิ่มราคาทีละ (bid_increment, default 100)
+    - หมวดหมู่ (15 หมวด), เวลาเริ่ม-ปิดประมูล
+
+  Validation:
+    - ราคาต้องเป็นจำนวนเต็ม > 0 (input ใช้ type="text" + filter ตัวเลข)
+    - เวลาเริ่มและปิดต้องไม่เป็นอดีต, เวลาปิดต้องมากกว่าเริ่ม
+    - รูปแปลงเป็น base64 ก่อนส่ง
+
+  Backend:
+    - INSERT auctions ด้วย current_bid = 0 (ไม่ใช่ starting_price)
+    - เก็บ seller_id และ seller_username
+
+── 6.2 Logic การบิด (POST /auctions/:id/bid) ──
+
+  ขั้นตอนสำคัญ:
+
+    1. ตรวจว่าอยู่ในช่วงเวลาประมูล (start_time ≤ now < end_time)
+
+    2. คำนวณราคาขั้นต่ำ:
+       - นับจำนวน bid จริง: SELECT COUNT(*) FROM bids WHERE auction_id = ?
+       - ถ้ายังไม่มีบิด (count = 0):
+           minimumBid = starting_price          ← บิดแรกเท่ากับราคาเริ่มต้น
+       - ถ้ามีบิดแล้ว (count > 0):
+           minimumBid = current_bid + bid_increment
+
+    3. ตรวจจำนวนเงินที่ส่งมา ≥ minimumBid
+
+    4. UPDATE auctions SET current_bid = amount
+       INSERT INTO bids (user_id, auction_id, bid_amount)
+
+  ตัวอย่าง:
+    starting_price = 100, bid_increment = 50
+    - บิดครั้งที่ 1: ขั้นต่ำ = 100 (starting_price)
+    - บิดครั้งที่ 2: ขั้นต่ำ = 100 + 50 = 150
+    - บิดครั้งที่ 3: ขั้นต่ำ = 150 + 50 = 200
+
+── 6.3 แสดงสินค้า (AuctionCard.jsx) ──
+
+  สถานะ 3 ระยะ (คำนวณจาก start_time, end_time):
+    - before : ยังไม่เปิดประมูล → แสดงเวลาเปิด, seller แก้ไขได้
+    - during : กำลังประมูล → แสดง countdown, bidder บิดได้
+    - after  : ปิดประมูลแล้ว → แสดงผู้ชนะ + ขั้นตอนถัดไป
+
+  Real-time update:
+    - ระหว่างประมูล: poll GET /auctions/:id ทุก 2 วินาที
+    - อัปเดต currentBid, hasBids ทุกครั้งที่ poll
+
+  Popup บิด:
+    - แสดงรายละเอียดสินค้า, ราคาปัจจุบัน, countdown
+    - input รับจำนวนเงิน, ตรวจว่า ≥ minimumBid
+    - ปุ่มแชทสอบถามผู้ขาย
+
+── 6.4 หมวดหมู่สินค้า (15 หมวด) ──
+
+  ของสะสม, อิเล็กทรอนิกส์, แฟชั่น, ศิลปะ, ยานพาหนะ,
+  เครื่องประดับ, นาฬิกา, กีฬา, เครื่องใช้ไฟฟ้า, หนังสือ,
+  เฟอร์นิเจอร์, เครื่องดนตรี, ของเล่น, สุขภาพและความงาม, อื่นๆ
+
+── 6.5 ผู้ชนะการประมูล ──
+
+  เมื่อ end_time ผ่านไปแล้ว:
+    - GET /auctions/:id จะหา bid สูงสุด → คืน winner_id, winner_name
+    - Bidder ผู้ชนะ: เห็นปุ่มแชทกับผู้ขาย
+    - Seller: เห็นปุ่มแชทกับผู้ชนะ
+    - แสดงขั้นตอนถัดไป (ติดต่อ, ชำระเงิน, รับสินค้า)
+
+
+================================================================================
+7. ระบบแชท (Messaging System)
+================================================================================
+
+── 7.1 โครงสร้าง ──
+
+  ข้อความเก็บในตาราง messages:
+    - auction_id: ผูกกับรายการประมูล (NULL = ข้อความจากแอดมิน)
+    - sender_id, receiver_id: ผู้ส่ง/ผู้รับ
+    - content: ข้อความ text (nullable)
+    - image: รูปภาพ base64 (nullable)
+    - ส่งได้ทั้ง text, รูปภาพ หรือทั้งคู่
+
+── 7.2 FloatingChat (FloatingChat.jsx) ──
+
+  - แชทลอยมุมขวาล่าง แสดงทุกหน้ายกเว้นตอนไม่ได้ login
+  - if (!token) return null; ← ซ่อนเมื่อไม่ได้ login
+  - รายการสนทนา poll ทุก 5 วินาที
+  - ข้อความ poll ทุก 3 วินาที
+  - รองรับขยาย/ย่อหน้าต่าง, ส่งรูปภาพ
+  - จัดกลุ่มสนทนาตาม (auction_id + other_user)
+
+── 7.3 Chat Page (Chat.jsx) ──
+
+  - หน้าแชทเต็มจอ (route: /chat/:auctionId/:otherUserId)
+  - poll ข้อความทุก 3 วินาที
+  - ส่งข้อความ text หรือรูปภาพ
+  - กดชื่อผู้ใช้ → ดูโปรไฟล์ (ยกเว้นแอดมิน)
+
+── 7.4 ข้อความแอดมิน ──
+
+  - แอดมินส่งข้อความโดยไม่ผูก auction (auction_id = NULL)
+  - Conversations query ใช้ LEFT JOIN auctions เพื่อรองรับ NULL
+  - แสดงชื่อว่า "ข้อความจากระบบ" เมื่อไม่มี auction
+
+
+================================================================================
+8. ระบบแอดมิน (Admin System)
+================================================================================
+
+── 8.1 Layout (Admin.jsx) ──
+
+  - Header คงที่ด้านบน (logo + title)
+  - Sidebar คงที่ด้านซ้าย (4 tabs + logout)
+  - Content เลื่อนได้ด้านขวา
+  - Tabs: หน้าแรก, ข้อมูลผู้ใช้, คำร้องเรียน, บันทึกการประมูล
+
+── 8.2 requireAdmin Middleware (admin.js) ──
+
+  ทุก route ใน /admin/* ต้องผ่าน:
+    1. authenticate (ตรวจ JWT token)
+    2. requireAdmin (ตรวจ role === "admin" จาก DB)
+
+── 8.3 Dashboard (AdminHome.jsx) ──
+
+  แสดง 4 การ์ดสถิติ:
+    - ผู้ใช้ทั้งหมด
+    - รายการกำลังประมูล
+    - คำร้องเรียน (pending + resolved)
+    - กิจกรรมล่าสุด
+
+  Auction Live Preview: แสดง 8 รายการประมูลล่าสุด
+  Recent Activities: 10 การบิดล่าสุด
+
+── 8.4 จัดการผู้ใช้ (AdminUsers.jsx) ──
+
+  - ตารางแสดง: User ID, ชื่อ, อีเมล, บทบาท, สถานะ
+  - ค้นหาด้วย ID (รองรับ "U5" format → strip "U" prefix)
+  - ค้นหาด้วยชื่อ, username, email
+  - Actions:
+    * View: modal โปรไฟล์ (แสดง likes/dislikes, auction_count/win_count)
+    * Suspend/Activate: ยืนยันก่อนทำ
+    * ส่งข้อความ: เปิด modal พิมพ์ข้อความ
+
+── 8.5 คำร้องเรียน (AdminReports.jsx) ──
+
+  - ตาราง + Detail Panel ด้านขวา
+  - Filter: ทั้งหมด / รอดำเนินการ / แก้ไขแล้ว / ปฏิเสธ
+  - ค้นหา: Report ID, User ID (reporter/target), ประเภท
+  - Actions: แก้ไขแล้ว, ปฏิเสธ, กลับไปรอดำเนินการ
+
+── 8.6 บันทึกการประมูล (AdminAuctionLogs.jsx) ──
+
+  - ตารางแสดง: Log ID, Auction, User, Bid, เวลา, สถานะ
+  - ค้นหาด้วย User ID หรือ Auction ID
+
+
+================================================================================
+9. ระบบโปรไฟล์และให้คะแนน (Profile & Rating)
+================================================================================
+
+── 9.1 ProfileBidder.jsx ──
+
+  - แสดง: avatar, ชื่อ, วันที่สมัคร
+  - แก้ไขโปรไฟล์: ชื่อ, อีเมล, รหัสผ่าน, รูปโปรไฟล์
+  - แสดงรายการที่ประมูลชนะ (my-wins)
+
+── 9.2 ProfileSeller.jsx ──
+
+  - เพิ่มจาก bidder: แสดง likes/dislikes
+  - แสดง: โพสต์ที่เปิดประมูล (active) + ประวัติ (ended)
+
+── 9.3 PublicProfile.jsx ──
+
+  แสดงโปรไฟล์สาธารณะเมื่อกดดูโปรไฟล์ผู้อื่น:
+  - Seller: จำนวนโพสต์, likes/dislikes, รายการสินค้า
+  - Bidder: จำนวนครั้งที่ชนะ, รายการที่ชนะ
+
+  ระบบให้คะแนน (user_ratings):
+    - ปุ่ม Like/Dislike (เฉพาะ profile seller)
+    - 1 คนให้ได้ 1 คะแนนต่อคน (UPSERT: ON CONFLICT DO UPDATE)
+    - ไม่สามารถให้คะแนนตัวเอง
+
+── 9.4  ระบบรายงานผู้ใช้ ──
+
+  อยู่ใน PublicProfile.jsx:
+  - ปุ่ม "รายงานผู้ใช้" (เฉพาะเมื่อ login แล้วและไม่ใช่ตัวเอง)
+  - ประเภทรายงานเปลี่ยนตาม role:
+    * Seller รายงาน Bidder: ไม่ชำระเงิน, ปั่นราคา, พฤติกรรม, ข้อมูลเท็จ
+    * Bidder รายงาน Seller: ไม่ส่งสินค้า, ไม่ตรงปก, พฤติกรรม
+  - POST /reports → admin จัดการใน AdminReports
+
+
+================================================================================
+10. Frontend Routing & Components
+================================================================================
+
+── 10.1 Routes (App.jsx) ──
+
+  /                      → Landing (หน้าต้อนรับ)
+  /login                 → Login
+  /register              → Register
+  /home-bidder           → HomeBidder
+  /home-seller           → HomeSeller
+  /admin                 → Admin (Dashboard)
+  /profile               → ProfileBidder
+  /profile-seller        → ProfileSeller
+  /create-auction        → CreateAuction (PrivateRoute)
+  /chat/:auctionId/:id   → Chat (PrivateRoute)
+  /profile/:userId       → PublicProfile
+
+  PrivateRoute: ตรวจว่ามี token ใน sessionStorage ถ้าไม่มี → redirect /
+
+── 10.2 Navbar (Navbar.jsx) ──
+
+  - Logo ซ้าย, ปุ่มหน้าแรก (navigate ตาม role)
+  - ค้นหาตรงกลาง (ส่ง searchText ผ่าน onSearch prop)
+  - ขวา:
+    * ไม่ได้ login: ปุ่ม ลงชื่อเข้าใช้ / สมัครสมาชิก
+    * login แล้ว: icon โปรไฟล์ + dropdown (โปรไฟล์, ออกจากระบบ)
+
+── 10.3 AuctionCard (AuctionCard.jsx) ──
+
+  Component หลักที่ใช้ซ้ำทุกหน้า:
+  - แสดงรูป, ชื่อสินค้า, ราคาเปิด, ราคาปัจจุบัน, bid_increment
+  - countdown แบบ HH:MM:SS (อัปเดตทุก 1 วินาที)
+  - Popup: รายละเอียด + ช่องบิด + แชทสอบถาม
+  - ปุ่มดูโปรไฟล์ผู้ขาย
+  - Popup แก้ไข (seller เท่านั้น, ก่อนเปิดประมูล)
+
+
+================================================================================
+11. การ Deploy ด้วย Docker
+================================================================================
+
+── 11.1 Docker Compose (docker-compose.yml) ──
+
+  3 Services:
+
+  ┌──────────┬────────────────────────────────────────────────┐
+  │ Service  │ รายละเอียด                                     │
+  ├──────────┼────────────────────────────────────────────────┤
+  │ db       │ postgres:15                                    │
+  │          │ Port: 5434 → 5432                              │
+  │          │ User: postgres, Pass: 1234, DB: jusbid         │
+  │          │ Mount schema.sql → docker-entrypoint-initdb.d  │
+  ├──────────┼────────────────────────────────────────────────┤
+  │ backend  │ Node 18 + Express                              │
+  │          │ Port: 5002 → 5000                              │
+  │          │ ENV: DB_HOST=db, FRONTEND_URL                  │
+  │          │ depends_on: db                                 │
+  ├──────────┼────────────────────────────────────────────────┤
+  │ frontend │ Multi-stage: Vite build → nginx:alpine         │
+  │          │ Port: 5175 → 80                                │
+  │          │ ARG: VITE_API_URL=http://localhost:5002         │
+  │          │ depends_on: backend                            │
+  └──────────┴────────────────────────────────────────────────┘
+
+── 11.2 Frontend Dockerfile (Multi-stage) ──
+
+  Stage 1 (build): Node 18 → npm install → vite build
+  Stage 2 (production): nginx:alpine → copy dist → copy nginx.conf
+
+── 11.3 nginx.conf ──
+
+  - SPA fallback: try_files $uri $uri/ /index.html
+  - ทำให้ React Router ทำงานได้เมื่อ refresh หน้า
+
+── 11.4 คำสั่ง Deploy ──
+
+  # Build และ Start ทั้งหมด
+  docker compose up --build
+
+  # Rebuild ใหม่ทั้งหมด (ไม่ใช้ cache)
+  docker compose down
+  docker compose build --no-cache
+  docker compose up -d
+
+  # ดู Logs
+  docker compose logs -f backend
+  docker compose logs -f frontend
+
+
+================================================================================
+สรุปการทำงานหลักของระบบ (System Flow Summary)
+================================================================================
+
+  ┌─────────┐     HTTP/REST      ┌─────────┐      SQL       ┌──────────┐
+  │ Browser │  ←──────────────→  │ Express │  ←──────────→  │ Postgres │
+  │ (React) │   Axios + JWT      │  API    │   pg Pool      │    DB    │
+  └─────────┘                    └─────────┘                └──────────┘
+
+  1. ผู้ใช้เปิดเว็บ → Landing Page → Login/Register
+  2. Login สำเร็จ → ได้ JWT token → เก็บ sessionStorage
+  3. ทุก API call → แนบ Bearer token → Backend ตรวจสอบ
+  4. Bidder: ดูสินค้า → บิดราคา → ชนะ → แชทกับ seller
+  5. Seller: สร้างประมูล → ดูบิด → จบ → แชทกับผู้ชนะ
+  6. Admin: ดู Dashboard → จัดการผู้ใช้/รายงาน → ส่งข้อความ
+
+================================================================================
+                         จบเอกสาร CodeExplain.txt
+================================================================================

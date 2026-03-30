@@ -77,8 +77,7 @@ router.get("/users", async (req, res) => {
 
     if (search) {
       values.push(parseInt(search) || 0);
-      values.push(`%${search}%`);
-      query += ` WHERE u.id = $1 OR u.display_name ILIKE $2 OR u.username ILIKE $2 OR u.email ILIKE $2`;
+      query += ` WHERE u.id = $1`;
     }
 
     query += " ORDER BY u.id ASC";
@@ -196,8 +195,7 @@ router.get("/reports", async (req, res) => {
     if (search) {
       const searchId = parseInt(search) || 0;
       values.push(searchId);
-      values.push(`%${search}%`);
-      query += ` WHERE r.id = $1 OR r.reporter_id = $1 OR r.target_id = $1 OR r.report_type ILIKE $2`;
+      query += ` WHERE r.reporter_id = $1 OR r.target_id = $1`;
     }
 
     query += " ORDER BY r.created_at DESC";
@@ -237,7 +235,7 @@ router.get("/auction-logs", async (req, res) => {
 
     if (search) {
       values.push(parseInt(search) || 0);
-      query += ` WHERE b.user_id = $1 OR b.auction_id = $1`;
+      query += ` WHERE b.user_id = $1`;
     }
 
     query += " ORDER BY b.bid_time DESC";
