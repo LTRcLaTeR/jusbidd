@@ -127,6 +127,35 @@
   border-bottom: 2px solid #1f4c82;
 }
 
+/* auto extend checkbox */
+
+.auto-extend-box {
+  padding: 14px 18px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f4c82;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #1f4c82;
+  cursor: pointer;
+}
+
+.auto-extend-box .hint {
+  font-size: 12px;
+  color: #666;
+  margin: 6px 0 0 28px;
+}
+
 /* post button */
 
 .post-btn{

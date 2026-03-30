@@ -175,11 +175,11 @@ router.post("/:id/bid", authenticate, async (req, res) => {
       return res.status(400).json({ message: `จำนวนเงินขั้นต่ำคือ ${minimumBid} บาท` });
     }
 
-    // ตรวจสอบเวลาคงเหลือ ≤ 5 นาที → ต่อเวลาเพิ่ม 5 นาที
+    // ตรวจสอบเวลาคงเหลือ ≤ 5 นาที → ต่อเวลาเพิ่ม 5 นาที (เฉพาะเมื่อเปิด auto_extend)
     const remainingMs = end - now;
     const fiveMinutes = 5 * 60 * 1000;
     let newEndTime = end;
-    if (remainingMs <= fiveMinutes) {
+    if (auction.auto_extend && remainingMs <= fiveMinutes) {
       newEndTime = new Date(end.getTime() + fiveMinutes);
       await pool.query("UPDATE auctions SET current_bid = $1, end_time = $2 WHERE id = $3", [parsedAmount, newEndTime.toISOString(), auctionId]);
     } else {
@@ -192,7 +192,7 @@ router.post("/:id/bid", authenticate, async (req, res) => {
     );
 
     res.json({
-      message: remainingMs <= fiveMinutes ? "บิทสำเร็จ (ต่อเวลาเพิ่ม 5 นาที)" : "บิทสำเร็จ",
+      message: (auction.auto_extend && remainingMs <= fiveMinutes) ? "บิทสำเร็จ (ต่อเวลาเพิ่ม 5 นาที)" : "บิทสำเร็จ",
       current_bid: parsedAmount,
       minimum_bid: parsedAmount + bidIncrement,
       end_time: newEndTime.toISOString()
@@ -253,7 +253,7 @@ router.put("/:id", authenticate, async (req, res) => {
 
 router.post("/", authenticate, async (req, res) => {
   try {
-    const { title, description, image, starting_price, category, bid_increment, start_time, end_time } = req.body;
+    const { title, description, image, starting_price, category, bid_increment, start_time, end_time, auto_extend } = req.body;
 
     if (!title || !description || !starting_price || !category || !start_time || !end_time) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -274,8 +274,8 @@ router.post("/", authenticate, async (req, res) => {
     }
 
     const result = await pool.query(
-      "INSERT INTO auctions (title, description, image, starting_price, current_bid, category, seller_id, seller_username, bid_increment, start_time, end_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *",
-      [title, description, image || '', startingPrice, 0, category, req.userId, sellerUsername, bidIncrementValue, startTimeValue, endTimeValue]
+      "INSERT INTO auctions (title, description, image, starting_price, current_bid, category, seller_id, seller_username, bid_increment, auto_extend, start_time, end_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
+      [title, description, image || '', startingPrice, 0, category, req.userId, sellerUsername, bidIncrementValue, auto_extend === true, startTimeValue, endTimeValue]
     );
 
     res.status(201).json(result.rows[0]);

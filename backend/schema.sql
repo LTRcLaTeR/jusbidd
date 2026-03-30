@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS auctions (
   seller_id INTEGER REFERENCES users(id),
   seller_username VARCHAR(100),
   bid_increment INTEGER DEFAULT 100,
+  auto_extend BOOLEAN DEFAULT false,
   start_time TIMESTAMP,
   end_time TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

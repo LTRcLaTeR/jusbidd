@@ -56,6 +56,13 @@
   color: #ffe082;
 }
 
+.auto-extend-badge {
+  margin: 4px 0 6px 0;
+  font-size: 12px;
+  color: #81d4fa;
+  font-weight: 600;
+}
+
 .bid-btn {
   width: 100%;
   padding: 8px;

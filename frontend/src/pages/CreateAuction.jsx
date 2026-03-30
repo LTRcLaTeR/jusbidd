@@ -15,7 +15,8 @@ export default function CreateAuction(){
     bid_increment:'100',
     category:'',
     start_time:'',
-    end_time:''
+    end_time:'',
+    auto_extend: false
   });
 
   const [image,setImage] = useState(null);
@@ -278,6 +279,18 @@ export default function CreateAuction(){
                 <option value="อื่นๆ">อื่นๆ</option>
               </select>
               {errors.category && <p className="error">{errors.category}</p>}
+            </div>
+
+            <div className="box auto-extend-box">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={form.auto_extend}
+                  onChange={(e) => setForm({ ...form, auto_extend: e.target.checked })}
+                />
+                เปิดระบบต่อเวลาอัตโนมัติ
+              </label>
+              <p className="hint">เมื่อมีการบิดในช่วง 5 นาทีสุดท้าย จะต่อเวลาเพิ่ม 5 นาทีโดยอัตโนมัติ (ต่อเวลาได้เรื่อยๆ)</p>
             </div>
 
           </div>

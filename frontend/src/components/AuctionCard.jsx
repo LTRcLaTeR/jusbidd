@@ -193,6 +193,9 @@ export default function AuctionCard({ item }) {
           <p className="price">ราคาเปิด {startingPrice} บาท</p>
           <p className="current-price">ราคาปัจจุบัน {currentBid} บาท</p>
           <p className="minimum-bid">บิดครั้งละ {bidIncrement} บาท</p>
+          {item.auto_extend && status === "during" && (
+            <p className="auto-extend-badge">⏱ ต่อเวลาอัตโนมัติ</p>
+          )}
           {role === "bidder" && status === "during" && (
             <button className="bid-btn" onClick={() => setShowBidPopup(true)}>เริ่มประมูล</button>
           )}

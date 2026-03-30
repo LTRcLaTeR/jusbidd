@@ -47,6 +47,7 @@ async function initDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    await pool.query(`ALTER TABLE auctions ADD COLUMN IF NOT EXISTS auto_extend BOOLEAN DEFAULT false`);
   } catch (err) {
     console.error("Migration error:", err.message);
   }
