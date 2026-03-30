@@ -85,7 +85,7 @@ export default function Login() {
               <FaUser className="input-icon" />
               <input
                 type="text"
-                placeholder="กรอกอีเมลของคุณ"
+                placeholder="กรอกชื่อผู้ใช้ของคุณ"
                 value={form.username}
                 onChange={(e) =>
                   setForm({ ...form, username: e.target.value })

@@ -112,7 +112,7 @@
   padding: 40px;
 }
 
-.public-profile-container h3 {
+.public-profile-container > h3 {
   font-size: 20px;
   color: #1e3a5f;
   margin-bottom: 20px;

@@ -373,12 +373,12 @@ app.post("/messages", authenticate, async (req, res) => {
     const { auction_id, receiver_id, content, image } = req.body;
     const hasContent = content && content.trim();
     const hasImage = image && image.trim();
-    if (!auction_id || !receiver_id || (!hasContent && !hasImage)) {
+    if (!receiver_id || (!hasContent && !hasImage)) {
       return res.status(400).json({ message: "ข้อมูลไม่ครบ" });
     }
     const result = await pool.query(
       "INSERT INTO messages (auction_id, sender_id, receiver_id, content, image) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [auction_id, req.userId, receiver_id, hasContent ? content.trim() : null, hasImage ? image : null]
+      [auction_id || null, req.userId, receiver_id, hasContent ? content.trim() : null, hasImage ? image : null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -391,16 +391,31 @@ app.post("/messages", authenticate, async (req, res) => {
 app.get("/messages/:auctionId/:otherUserId", authenticate, async (req, res) => {
   try {
     const { auctionId, otherUserId } = req.params;
-    const result = await pool.query(
-      `SELECT m.*, u.display_name as sender_name
-       FROM messages m
-       JOIN users u ON m.sender_id = u.id
-       WHERE m.auction_id = $1
-         AND ((m.sender_id = $2 AND m.receiver_id = $3)
-           OR (m.sender_id = $3 AND m.receiver_id = $2))
-       ORDER BY m.created_at ASC`,
-      [auctionId, req.userId, otherUserId]
-    );
+    let result;
+    if (auctionId === "0" || auctionId === "null") {
+      // Admin messages (no auction_id)
+      result = await pool.query(
+        `SELECT m.*, u.display_name as sender_name
+         FROM messages m
+         JOIN users u ON m.sender_id = u.id
+         WHERE m.auction_id IS NULL
+           AND ((m.sender_id = $1 AND m.receiver_id = $2)
+             OR (m.sender_id = $2 AND m.receiver_id = $1))
+         ORDER BY m.created_at ASC`,
+        [req.userId, otherUserId]
+      );
+    } else {
+      result = await pool.query(
+        `SELECT m.*, u.display_name as sender_name
+         FROM messages m
+         JOIN users u ON m.sender_id = u.id
+         WHERE m.auction_id = $1
+           AND ((m.sender_id = $2 AND m.receiver_id = $3)
+             OR (m.sender_id = $3 AND m.receiver_id = $2))
+         ORDER BY m.created_at ASC`,
+        [auctionId, req.userId, otherUserId]
+      );
+    }
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -412,19 +427,20 @@ app.get("/messages/:auctionId/:otherUserId", authenticate, async (req, res) => {
 app.get("/conversations", authenticate, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT DISTINCT ON (m.auction_id, other_user)
+      `SELECT DISTINCT ON (COALESCE(m.auction_id, 0), other_user)
         m.auction_id,
-        a.title as auction_title,
+        COALESCE(a.title, 'ข้อความจากระบบ') as auction_title,
         a.image as auction_image,
         CASE WHEN m.sender_id = $1 THEN m.receiver_id ELSE m.sender_id END as other_user,
         u.display_name as other_user_name,
+        u.role_id as other_user_role_id,
         COALESCE(m.content, CASE WHEN m.image IS NOT NULL THEN '[รูปภาพ]' ELSE '' END) as last_message,
         m.created_at as last_message_time
        FROM messages m
-       JOIN auctions a ON m.auction_id = a.id
+       LEFT JOIN auctions a ON m.auction_id = a.id
        JOIN users u ON u.id = CASE WHEN m.sender_id = $1 THEN m.receiver_id ELSE m.sender_id END
        WHERE m.sender_id = $1 OR m.receiver_id = $1
-       ORDER BY other_user, m.auction_id, m.created_at DESC`,
+       ORDER BY other_user, COALESCE(m.auction_id, 0), m.created_at DESC`,
       [req.userId]
     );
     res.json(result.rows);

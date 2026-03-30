@@ -23,7 +23,11 @@ export default function AdminReports() {
   };
 
   const handleSearch = () => {
-    fetchReports(search.trim());
+    let val = search.trim();
+    if (/^[Uu]\d+$/.test(val)) {
+      val = val.substring(1);
+    }
+    fetchReports(val);
   };
 
   const handleShowAll = () => {
@@ -82,7 +86,7 @@ export default function AdminReports() {
           </select>
           <input
             className="admin-search-input"
-            placeholder="ค้นหา ID หรือประเภท"
+            placeholder="ค้นหา ID ผู้ใช้ หรือประเภท"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}

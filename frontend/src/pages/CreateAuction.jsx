@@ -31,6 +31,14 @@ export default function CreateAuction(){
     });
   };
 
+  const handlePriceChange = (e)=>{
+    const val = e.target.value.replace(/[^0-9]/g, "");
+    setForm({
+      ...form,
+      [e.target.name]: val
+    });
+  };
+
   const handleImage = (e)=>{
     const file = e.target.files[0];
     setImage(file);
@@ -224,11 +232,10 @@ export default function CreateAuction(){
               <label>ราคาเริ่มต้น</label>
               <input
                 name="starting_price"
-                type="number"
-                min="1"
-                step="1"
+                type="text"
+                inputMode="numeric"
                 value={form.starting_price}
-                onChange={handleChange}
+                onChange={handlePriceChange}
               />
               {errors.starting_price && <p className="error">{errors.starting_price}</p>}
             </div>
@@ -237,11 +244,10 @@ export default function CreateAuction(){
               <label>เพิ่มราคาทีละ</label>
               <input
                 name="bid_increment"
-                type="number"
-                min="1"
-                step="1"
+                type="text"
+                inputMode="numeric"
                 value={form.bid_increment}
-                onChange={handleChange}
+                onChange={handlePriceChange}
               />
               {errors.bid_increment && <p className="error">{errors.bid_increment}</p>}
             </div>

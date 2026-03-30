@@ -20,7 +20,11 @@ export default function AdminAuctionLogs() {
   };
 
   const handleSearch = () => {
-    fetchLogs(search.trim());
+    let val = search.trim();
+    if (/^[Uu]\d+$/.test(val)) {
+      val = val.substring(1);
+    }
+    fetchLogs(val);
   };
 
   const handleShowAll = () => {

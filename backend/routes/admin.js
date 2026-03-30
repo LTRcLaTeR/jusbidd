@@ -101,7 +101,28 @@ router.get("/users/:id", async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.json(result.rows[0]);
+    const user = result.rows[0];
+
+    // Get likes/dislikes
+    const likesRes = await pool.query("SELECT COUNT(*) FROM user_ratings WHERE target_id = $1 AND rating = 'like'", [req.params.id]);
+    const dislikesRes = await pool.query("SELECT COUNT(*) FROM user_ratings WHERE target_id = $1 AND rating = 'dislike'", [req.params.id]);
+    user.likes = parseInt(likesRes.rows[0].count);
+    user.dislikes = parseInt(dislikesRes.rows[0].count);
+
+    if (user.role === 'seller') {
+      const auctionsRes = await pool.query("SELECT COUNT(*) FROM auctions WHERE seller_id = $1", [req.params.id]);
+      user.auction_count = parseInt(auctionsRes.rows[0].count);
+    } else if (user.role === 'bidder') {
+      const winsRes = await pool.query(
+        `SELECT COUNT(DISTINCT a.id)
+         FROM auctions a JOIN bids b ON a.id = b.auction_id
+         WHERE a.end_time <= NOW() AND b.user_id = $1 AND b.bid_amount = a.current_bid`,
+        [req.params.id]
+      );
+      user.win_count = parseInt(winsRes.rows[0].count);
+    }
+
+    res.json(user);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -173,9 +194,10 @@ router.get("/reports", async (req, res) => {
     let values = [];
 
     if (search) {
-      values.push(parseInt(search) || 0);
+      const searchId = parseInt(search) || 0;
+      values.push(searchId);
       values.push(`%${search}%`);
-      query += ` WHERE r.id = $1 OR r.report_type ILIKE $2`;
+      query += ` WHERE r.id = $1 OR r.reporter_id = $1 OR r.target_id = $1 OR r.report_type ILIKE $2`;
     }
 
     query += " ORDER BY r.created_at DESC";

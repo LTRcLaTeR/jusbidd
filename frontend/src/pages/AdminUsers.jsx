@@ -34,7 +34,12 @@ export default function AdminUsers() {
   };
 
   const handleSearch = () => {
-    fetchUsers(search.trim());
+    let val = search.trim();
+    // Strip "U" or "u" prefix so users can search by "U5" format
+    if (/^[Uu]\d+$/.test(val)) {
+      val = val.substring(1);
+    }
+    fetchUsers(val);
   };
 
   const handleShowAll = () => {

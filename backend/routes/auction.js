@@ -109,6 +109,10 @@ router.get("/:id", async (req, res) => {
     }
     const auction = result.rows[0];
 
+    // Check if there are actual bids
+    const bidCountRes = await pool.query("SELECT COUNT(*) FROM bids WHERE auction_id = $1", [auction.id]);
+    auction.has_bids = parseInt(bidCountRes.rows[0].count) > 0;
+
     // If auction ended, find the winner (highest bidder)
     const now = new Date();
     const end = new Date(auction.end_time);
@@ -154,9 +158,13 @@ router.post("/:id/bid", authenticate, async (req, res) => {
       return res.status(400).json({ message: "ไม่อยู่ในช่วงเวลาประมูล" });
     }
 
-    const currentBid = Number(auction.current_bid) > 0 ? Number(auction.current_bid) : Number(auction.starting_price);
+    const rawCurrentBid = Number(auction.current_bid);
     const bidIncrement = Number(auction.bid_increment) || 100;
-    const minimumBid = currentBid + bidIncrement;
+
+    // Check if there are actual bids to determine minimum
+    const bidCountRes = await pool.query("SELECT COUNT(*) FROM bids WHERE auction_id = $1", [auctionId]);
+    const hasBids = parseInt(bidCountRes.rows[0].count) > 0;
+    const minimumBid = hasBids ? rawCurrentBid + bidIncrement : Number(auction.starting_price);
     const parsedAmount = Number(amount);
 
     if (!Number.isInteger(parsedAmount)) {
@@ -252,7 +260,7 @@ router.post("/", authenticate, async (req, res) => {
 
     const result = await pool.query(
       "INSERT INTO auctions (title, description, image, starting_price, current_bid, category, seller_id, seller_username, bid_increment, start_time, end_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *",
-      [title, description, image || '', startingPrice, startingPrice, category, req.userId, sellerUsername, bidIncrementValue, startTimeValue, endTimeValue]
+      [title, description, image || '', startingPrice, 0, category, req.userId, sellerUsername, bidIncrementValue, startTimeValue, endTimeValue]
     );
 
     res.status(201).json(result.rows[0]);

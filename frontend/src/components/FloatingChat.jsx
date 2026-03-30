@@ -16,6 +16,10 @@ export default function FloatingChat() {
   const messagesEndRef = useRef(null);
   const imageInputRef = useRef(null);
   const myId = sessionStorage.getItem("userId");
+  const token = sessionStorage.getItem("token");
+
+  // Don't render anything if not logged in
+  if (!token) return null;
 
   useEffect(() => {
     if (open && !activeConv) {
@@ -60,7 +64,7 @@ export default function FloatingChat() {
     if (!newMessage.trim() || !activeConv) return;
     try {
       await api.post("/messages", {
-        auction_id: Number(activeConv.auctionId),
+        auction_id: activeConv.auctionId || null,
         receiver_id: Number(activeConv.otherUserId),
         content: newMessage.trim()
       });
@@ -78,7 +82,7 @@ export default function FloatingChat() {
     reader.onload = async () => {
       try {
         await api.post("/messages", {
-          auction_id: Number(activeConv.auctionId),
+          auction_id: activeConv.auctionId || null,
           receiver_id: Number(activeConv.otherUserId),
           content: "",
           image: reader.result
@@ -154,7 +158,7 @@ export default function FloatingChat() {
                     className="fc-conv-item"
                     onClick={() =>
                       setActiveConv({
-                        auctionId: c.auction_id,
+                        auctionId: c.auction_id || 0,
                         otherUserId: c.other_user,
                         otherUserName: c.other_user_name,
                         otherUserRoleId: c.other_user_role_id

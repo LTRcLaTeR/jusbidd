@@ -19,11 +19,12 @@ export default function AuctionCard({ item }) {
   const [currentBid, setCurrentBid] = useState(
     Number(item.current_bid) > 0 ? Number(item.current_bid) : startingPrice
   );
+  const [hasBids, setHasBids] = useState(item.has_bids === true);
   const [bidAmount, setBidAmount] = useState("");
   const [bidError, setBidError] = useState("");
   const [winnerName, setWinnerName] = useState("");
   const [winnerId, setWinnerId] = useState(null);
-  const minimumBid = Number(currentBid) + bidIncrement;
+  const minimumBid = hasBids ? Number(currentBid) + bidIncrement : startingPrice;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -58,9 +59,11 @@ export default function AuctionCard({ item }) {
       const interval = setInterval(async () => {
         try {
           const res = await api.get(`/auctions/${item.id}`);
+          const rawBid = Number(res.data.current_bid);
+          setHasBids(res.data.has_bids === true);
           setCurrentBid(
-            Number(res.data.current_bid) > 0
-              ? Number(res.data.current_bid)
+            rawBid > 0
+              ? rawBid
               : Number(res.data.starting_price)
           );
         } catch {}
@@ -75,9 +78,11 @@ export default function AuctionCard({ item }) {
             setWinnerName(res.data.winner_name);
             setWinnerId(res.data.winner_id);
           }
+          const rawBid = Number(res.data.current_bid);
+          setHasBids(res.data.has_bids === true);
           setCurrentBid(
-            Number(res.data.current_bid) > 0
-              ? Number(res.data.current_bid)
+            rawBid > 0
+              ? rawBid
               : Number(res.data.starting_price)
           );
         } catch {}
@@ -122,6 +127,7 @@ export default function AuctionCard({ item }) {
     try {
       const res = await api.post(`/auctions/${item.id}/bid`, { amount: parsedAmount });
       setCurrentBid(res.data.current_bid);
+      setHasBids(true);
       setBidError("");
       setBidAmount("");
       setShowBidPopup(false);
@@ -256,7 +262,7 @@ export default function AuctionCard({ item }) {
               <div className="bid-popup-left">
                 <img src={item.image} alt={item.title} className="bid-popup-img-new" />
                 <div className="bid-popup-seller-row" onClick={handleViewSellerProfile} style={{ cursor: "pointer" }}>
-                  <span>ผู้ขาย: {item.seller_username || "-"} <FaUser /></span>
+                  <FaUser /> <span>ผู้ขาย: {item.seller_username || "-"}</span>
                 </div>
               </div>
 
