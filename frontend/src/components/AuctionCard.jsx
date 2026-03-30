@@ -24,13 +24,14 @@ export default function AuctionCard({ item }) {
   const [bidError, setBidError] = useState("");
   const [winnerName, setWinnerName] = useState("");
   const [winnerId, setWinnerId] = useState(null);
+  const [endTime, setEndTime] = useState(item.end_time);
   const minimumBid = hasBids ? Number(currentBid) + bidIncrement : startingPrice;
 
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
       const start = new Date(item.start_time);
-      const end = new Date(item.end_time);
+      const end = new Date(endTime);
       if (now < start) {
         setStatus("before");
         setCountdown("");
@@ -51,7 +52,7 @@ export default function AuctionCard({ item }) {
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [item.start_time, item.end_time]);
+  }, [item.start_time, endTime]);
 
   // Real-time bid update + winner fetch
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function AuctionCard({ item }) {
               ? rawBid
               : Number(res.data.starting_price)
           );
+          if (res.data.end_time) setEndTime(res.data.end_time);
         } catch {}
       }, 2000);
       return () => clearInterval(interval);
@@ -85,6 +87,7 @@ export default function AuctionCard({ item }) {
               ? rawBid
               : Number(res.data.starting_price)
           );
+          if (res.data.end_time) setEndTime(res.data.end_time);
         } catch {}
       })();
     }
@@ -128,6 +131,7 @@ export default function AuctionCard({ item }) {
       const res = await api.post(`/auctions/${item.id}/bid`, { amount: parsedAmount });
       setCurrentBid(res.data.current_bid);
       setHasBids(true);
+      if (res.data.end_time) setEndTime(res.data.end_time);
       setBidError("");
       setBidAmount("");
       setShowBidPopup(false);

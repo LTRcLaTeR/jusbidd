@@ -175,13 +175,28 @@ router.post("/:id/bid", authenticate, async (req, res) => {
       return res.status(400).json({ message: `จำนวนเงินขั้นต่ำคือ ${minimumBid} บาท` });
     }
 
-    await pool.query("UPDATE auctions SET current_bid = $1 WHERE id = $2", [parsedAmount, auctionId]);
+    // ตรวจสอบเวลาคงเหลือ ≤ 5 นาที → ต่อเวลาเพิ่ม 5 นาที
+    const remainingMs = end - now;
+    const fiveMinutes = 5 * 60 * 1000;
+    let newEndTime = end;
+    if (remainingMs <= fiveMinutes) {
+      newEndTime = new Date(end.getTime() + fiveMinutes);
+      await pool.query("UPDATE auctions SET current_bid = $1, end_time = $2 WHERE id = $3", [parsedAmount, newEndTime.toISOString(), auctionId]);
+    } else {
+      await pool.query("UPDATE auctions SET current_bid = $1 WHERE id = $2", [parsedAmount, auctionId]);
+    }
+
     await pool.query(
       "INSERT INTO bids (user_id, auction_id, bid_amount) VALUES ($1, $2, $3)",
       [req.userId, auctionId, parsedAmount]
     );
 
-    res.json({ message: "บิทสำเร็จ", current_bid: parsedAmount, minimum_bid: parsedAmount + bidIncrement });
+    res.json({
+      message: remainingMs <= fiveMinutes ? "บิทสำเร็จ (ต่อเวลาเพิ่ม 5 นาที)" : "บิทสำเร็จ",
+      current_bid: parsedAmount,
+      minimum_bid: parsedAmount + bidIncrement,
+      end_time: newEndTime.toISOString()
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server Error" });
