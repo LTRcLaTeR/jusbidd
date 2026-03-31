@@ -100,7 +100,7 @@ export default function AdminUsers() {
   };
 
   const getRoleThai = (role) => {
-    if (role === "bidder") return "Buyer";
+    if (role === "bidder") return "Bidder";
     if (role === "seller") return "Seller";
     return role;
   };
